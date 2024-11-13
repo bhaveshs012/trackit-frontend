@@ -90,7 +90,7 @@ export default function Login() {
           </form>
         </Form>
         <p className="text-sm text-muted-foreground text-center">
-          Already have an account? <span className="underline">Sign up</span>
+          Not Registered yet? <span className="underline">Sign up</span>
         </p>
       </div>
     </div>
