@@ -70,3 +70,13 @@ body {
   height: 100%; /* Ensures the body covers the viewport height */
   width: 100%; /* Ensures the body covers the viewport width */
 }
+
+body {
+  font-family: "Montserrat", sans-serif;
+  overflow-y: scroll;
+  height: 100vh;
+}
+
+body::-webkit-scrollbar {
+  display: none;
+}
