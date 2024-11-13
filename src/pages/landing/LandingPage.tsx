@@ -1,12 +1,14 @@
 import Footer from "@/components/footer/Footer";
 import Header from "@/components/header/Header";
 import { Button } from "@/components/ui/button";
-import FlickeringGrid from "@/components/ui/flickering-grid";
+// import FlickeringGrid from "@/components/ui/flickering-grid";
+import AnimatedGridPattern from "@/components/ui/animated-grid-pattern";
 import TypingAnimation from "@/components/ui/typing-animation";
 import PlannerImage from "/images/landingPage/planner.png";
 import PlannerImage2 from "/images/landingPage/planner2.png";
 import InterviewImage from "/images/landingPage/interview.png";
 import TrackerImage from "/images/landingPage/tracker.png";
+import { cn } from "@/lib/utils";
 
 function LandingPage() {
   return (
@@ -14,14 +16,15 @@ function LandingPage() {
       <div className="relative w-full min-h-screen overflow-hidden flex flex-col">
         <Header />
         <div className="relative flex-grow flex flex-col justify-center items-center">
-          <FlickeringGrid
-            className="absolute inset-0 z-0 [mask-image:radial-gradient(450px_circle_at_center,white,transparent)]"
-            squareSize={4}
-            gridGap={6}
-            color="#60A5FA"
-            maxOpacity={0.5}
-            flickerChance={0.1}
-            height={800}
+          <AnimatedGridPattern
+            numSquares={30}
+            maxOpacity={0.1}
+            duration={3}
+            repeatDelay={1}
+            className={cn(
+              "[mask-image:radial-gradient(500px_circle_at_center,white,transparent)]",
+              "inset-x-0 inset-y-[-30%] h-[200%] skew-y-12 absolute"
+            )}
           />
 
           <main className="relative z-10 flex-grow w-2/3 mx-auto flex flex-col justify-center items-center h-full">
