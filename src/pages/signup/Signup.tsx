@@ -15,6 +15,8 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import TrackItLogoBlack from "/logos/trackit-transparent-black.png";
+import Heading from "@/components/typography/Heading";
+import SubHeading from "@/components/typography/SubHeading";
 
 const FormSchema = z
   .object({
@@ -83,12 +85,8 @@ export default function Signup() {
           alt="Logo"
           className="w-12 h-auto mb-4 mx-auto"
         />
-        <h4 className="scroll-m-20 text-2xl font-semibold tracking-tight text-center">
-          Create an account
-        </h4>
-        <p className="text-md text-muted-foreground">
-          Sign up to get started with our services
-        </p>
+        <Heading title="Create an account" />
+        <SubHeading subtitle="Sign up to get started with our services" />
       </div>
       <div className="w-full space-y-4 max-w-3xl border-2 p-6 rounded-lg shadow-lg">
         <Form {...form}>

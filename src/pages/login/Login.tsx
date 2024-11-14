@@ -13,6 +13,8 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import TrackItLogoBlack from "/logos/trackit-transparent-black.png";
+import Heading from "@/components/typography/Heading";
+import SubHeading from "@/components/typography/SubHeading";
 
 const FormSchema = z.object({
   email: z.string().email("Enter a valid email !!"),
@@ -42,12 +44,8 @@ export default function Login() {
           alt="Logo"
           className="w-12 h-auto mb-4 mx-auto"
         />
-        <h4 className="scroll-m-20 text-2xl font-semibold tracking-tight text-center">
-          Welcome back !
-        </h4>
-        <p className="text-md text-muted-foreground">
-          Manage your job applications and insights in one place.
-        </p>
+        <Heading title="Welcome back !" />
+        <SubHeading subtitle="Manage your job applications and insights in one place." />
       </div>
       <div className="w-full space-y-4 max-w-md border-2 p-6 rounded-lg shadow-lg">
         <Form {...form}>
