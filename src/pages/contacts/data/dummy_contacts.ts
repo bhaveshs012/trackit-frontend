@@ -1,4 +1,4 @@
-import ContactModel from "../models/Contact.model";
+import ContactModel from "../models/contact.model";
 
 const contacts: ContactModel[] = [
   {

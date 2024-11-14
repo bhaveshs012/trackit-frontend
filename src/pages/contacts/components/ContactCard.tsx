@@ -1,7 +1,7 @@
 import { Mail, Briefcase, Phone, Linkedin } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import ContactModel from "../models/Contact.model";
+import ContactModel from "../models/contact.model";
 
 export default function ContactCard({
   name,
@@ -10,7 +10,6 @@ export default function ContactCard({
   position,
   phoneNumber,
   linkedinProfile,
-  avatarUrl,
 }: ContactModel) {
   return (
     <Card className="w-full max-w-md mx-auto mb-6 last:mb-0">
