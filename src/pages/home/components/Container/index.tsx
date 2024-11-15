@@ -6,19 +6,13 @@ import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
 
 const Container = ({ id, children, title, onAddItem }: ContainerProps) => {
-  const {
-    attributes,
-    setNodeRef,
-    listeners,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({
-    id: id,
-    data: {
-      type: "container",
-    },
-  });
+  const { attributes, setNodeRef, transform, transition, isDragging } =
+    useSortable({
+      id: id,
+      data: {
+        type: "container",
+      },
+    });
   return (
     <div
       {...attributes}

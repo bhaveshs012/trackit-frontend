@@ -42,6 +42,7 @@ function Home() {
   }
 
   function handleDragEnd(event: DragEndEvent) {
+    //* These are the items in the container and not the container itself
     const { active, over } = event;
     if (!over) {
       setActiveId(null);
@@ -55,12 +56,16 @@ function Home() {
     if (!activeContainer || !overContainer) return;
 
     if (activeContainer.id === overContainer.id) {
+      //* Getting the container id where we have to drop the item : could be replaced by overContainer.id as well
       const containerIndex = containers.findIndex(
         (c) => c.id === activeContainer.id
       );
+
+      //* Getting the old index of the item in the container
       const oldIndex = activeContainer.items.findIndex(
         (i) => i.id === active.id
       );
+      //* The new moved index
       const newIndex = overContainer.items.findIndex((i) => i.id === over.id);
 
       setContainers((prev) => {
@@ -80,18 +85,21 @@ function Home() {
         (c) => c.id === overContainer.id
       );
 
+      // The item index to be moved
       const itemIndex = activeContainer.items.findIndex(
         (i) => i.id === active.id
       );
+
+      //* Removing the element from the old container
       const [movedItem] = activeContainer.items.splice(itemIndex, 1);
 
       setContainers((prev) => {
-        const newContainers = [...prev];
-        newContainers[activeContainerIndex].items = [...activeContainer.items];
+        const newContainers = [...prev]; // creating a copy
+        newContainers[activeContainerIndex].items = [...activeContainer.items]; // active container will be the same : item already removed
         newContainers[overContainerIndex].items = [
           ...overContainer.items,
           movedItem,
-        ];
+        ]; // over container will have the new item added to the end
         return newContainers;
       });
     }
