@@ -3,13 +3,14 @@ import { ThemeProvider } from "@/context/ThemeProvider";
 // import LandingPage from "./pages/landing/LandingPage";
 // import Contacts from "./pages/contacts/Contacts";
 // import Interviews from "./pages/interviews/Interviews";
-import Home from "./pages/home/Home";
+// import Home from "./pages/home/Home";
+import Resumes from "./pages/resumes/Resumes";
 // import Signup from "./pages/signup/Signup";
 
 export default function App() {
   return (
     <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
-      <Home />
+      <Resumes />
     </ThemeProvider>
   );
 }

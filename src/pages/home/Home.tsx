@@ -22,6 +22,7 @@ import {
 import Container from "./components/Container";
 import JobApplicationCard from "./components/ApplicationCard";
 import dummyContainers, { DNDType } from "./data/dummy_data";
+import SubHeading from "@/components/typography/SubHeading";
 
 function Home() {
   const [containers, setContainers] = useState<DNDType[]>(dummyContainers);
@@ -109,9 +110,10 @@ function Home() {
   return (
     <div className="flex flex-col min-h-screen p-6 gap-y-6">
       {/* Header Section */}
-      <div className="flex flex-row justify-between">
-        <div className="flex gap-x-4 items-center">
+      <div className="flex flex-row justify-between items-center">
+        <div className="flex flex-col gap-y-1 items-start">
           <Heading title="Welcome Back, Bhavesh!" />
+          <SubHeading subtitle="Have a look at all the job applications" />
         </div>
         <Button variant={"outline"}>
           <div className="flex gap-x-4 items-center">
