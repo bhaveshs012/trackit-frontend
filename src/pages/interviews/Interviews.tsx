@@ -6,6 +6,8 @@ import interviewData from "./data/dummy_interviews";
 import { ScheduledInterviewModel } from "./models/interview.model";
 import ScheduledInterviewCard from "./components/ScheduledInterviewCard";
 import { useId } from "react";
+import { Dialog, DialogTrigger } from "@/components/ui/dialog";
+import AddInterviewScheduleModal from "@/components/modals/AddInterviewSchedule";
 
 function Interviews() {
   return (
@@ -16,12 +18,18 @@ function Interviews() {
           <Heading title="Interviews" />
           <Badge variant="outline">10</Badge>
         </div>
-        <Button variant={"outline"}>
-          <div className="flex gap-x-4 items-center">
-            <PlusCircle />
-            <p>Add Interview Schedule</p>
-          </div>
-        </Button>
+
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button variant={"outline"}>
+              <div className="flex gap-x-4 items-center">
+                <PlusCircle />
+                <p>Add New Schedule</p>
+              </div>
+            </Button>
+          </DialogTrigger>
+          <AddInterviewScheduleModal />
+        </Dialog>
       </div>
       {/* Interview Cards Section */}
       <div className="flex w-full flex-wrap">

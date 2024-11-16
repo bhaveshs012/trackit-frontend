@@ -6,6 +6,8 @@ import contacts from "./data/dummy_contacts";
 import ContactModel from "./models/contact.model";
 import ContactCard from "./components/ContactCard";
 import { useId } from "react";
+import { Dialog, DialogTrigger } from "@/components/ui/dialog";
+import AddContactModal from "@/components/modals/AddContactModal";
 
 // Need to make the number of contacts and the list dynamic
 
@@ -18,12 +20,17 @@ function Contacts() {
           <Heading title="Contacts" />
           <Badge variant="outline">10</Badge>
         </div>
-        <Button variant={"outline"}>
-          <div className="flex gap-x-4 items-center">
-            <CircleUserRound />
-            <p>Add New Contact</p>
-          </div>
-        </Button>
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button variant={"outline"}>
+              <div className="flex gap-x-4 items-center">
+                <CircleUserRound />
+                <p>Add New Contact</p>
+              </div>
+            </Button>
+          </DialogTrigger>
+          <AddContactModal />
+        </Dialog>
       </div>
       {/* Contact Cards Section */}
       <div className="flex w-full flex-wrap">
