@@ -1,7 +1,6 @@
 import Footer from "@/components/footer/Footer";
 import Header from "@/components/header/Header";
 import { Button } from "@/components/ui/button";
-// import FlickeringGrid from "@/components/ui/flickering-grid";
 import AnimatedGridPattern from "@/components/ui/animated-grid-pattern";
 import TypingAnimation from "@/components/ui/typing-animation";
 import PlannerImage from "/images/landingPage/planner.png";
@@ -9,8 +8,10 @@ import PlannerImage2 from "/images/landingPage/planner2.png";
 import InterviewImage from "/images/landingPage/interview.png";
 import TrackerImage from "/images/landingPage/tracker.png";
 import { cn } from "@/lib/utils";
+import { useNavigate } from "react-router-dom";
 
 function LandingPage() {
+  const navigate = useNavigate();
   return (
     <>
       <div className="relative w-full min-h-screen overflow-hidden flex flex-col">
@@ -39,7 +40,9 @@ function LandingPage() {
                   Stay organized, manage your applications, and never miss an
                   opportunity.
                 </p>
-                <Button variant={"outline"}>Get Started</Button>
+                <Button variant="outline" onClick={() => navigate("/home")}>
+                  Get Started
+                </Button>
               </div>
             </section>
           </main>
