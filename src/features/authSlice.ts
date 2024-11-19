@@ -6,7 +6,8 @@ const initialState = {
   user: null,
   accessToken: Cookies.get("accessToken") || null,
   refreshToken: Cookies.get("refreshToken") || null,
-  isAuthenticated: !!Cookies.get("accessToken"),
+  // isAuthenticated: !!Cookies.get("accessToken"),
+  isAuthenticated: true,
   loading: false,
   error: null,
 };
@@ -20,6 +21,7 @@ const authSlice = createSlice({
       state.accessToken = action.payload.accessToken;
       state.refreshToken = action.payload.refreshToken;
       state.isAuthenticated = true;
+      console.log("State: ", state);
       Cookies.set("accessToken", action.payload.accessToken);
       Cookies.set("refreshToken", action.payload.refreshToken);
     },

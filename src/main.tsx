@@ -9,7 +9,7 @@ import router from "./routes/Routes.tsx";
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <Provider store={store}>
-      <RouterProvider router={router} />
+      <RouterProvider router={router} future={{ v7_startTransition: true }} />
     </Provider>
   </StrictMode>
 );
