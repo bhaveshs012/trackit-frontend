@@ -4,31 +4,19 @@ import { ThemeProvider } from "@/context/ThemeProvider";
 import { useDispatch } from "react-redux";
 import { Outlet } from "react-router-dom";
 import apiClient from "./api/apiClient";
-import Cookies from "js-cookie";
+import { useNavigate } from "react-router-dom";
 
 export default function App() {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const checkLogin = async () => {
       dispatch(setLoading(true));
       try {
-        const refreshToken = Cookies.get("refreshToken"); // You could also use Cookies
-        if (refreshToken) {
-          const response = await apiClient.post("/users/refresh-token", {
-            refreshToken,
-          });
-
-          const {
-            accessToken,
-            refreshToken: newRefreshToken,
-            user,
-          } = response.data.data;
-          dispatch(
-            loginSuccess({ user, accessToken, refreshToken: newRefreshToken })
-          );
-        } else {
-          dispatch(logout());
+        const response = await apiClient.get("/users/autoLogin");
+        if (response.status === 200) {
+          navigate("/home");
         }
       } catch (error) {
         dispatch(logout());
@@ -36,7 +24,6 @@ export default function App() {
         dispatch(setLoading(false));
       }
     };
-
     checkLogin();
   }, [dispatch]);
 

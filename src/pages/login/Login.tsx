@@ -15,6 +15,9 @@ import { Input } from "@/components/ui/input";
 import TrackItLogoBlack from "/logos/trackit-transparent-black.png";
 import Heading from "@/components/typography/Heading";
 import SubHeading from "@/components/typography/SubHeading";
+import { useDispatch, useSelector } from "react-redux";
+import { loginSuccess, setLoading } from "@/features/authSlice";
+import apiClient from "@/api/apiClient";
 
 const FormSchema = z.object({
   email: z.string().email("Enter a valid email !!"),
@@ -32,8 +35,26 @@ export default function Login() {
     },
   });
 
+  //* Redux states
+  const dispatch = useDispatch();
+  const { loading } = useSelector((state: any) => state.auth);
+
   function onSubmit(values: z.infer<typeof FormSchema>) {
-    console.log(values);
+    const submitHandler = async () => {
+      try {
+        dispatch(setLoading(true));
+        const response = await apiClient.post("/users/login", {
+          email: values.email,
+          password: values.password,
+        });
+        dispatch(loginSuccess(response.data.data));
+      } catch (error) {
+        console.error("Login failed:", error);
+      } finally {
+        dispatch(setLoading(false));
+      }
+    };
+    submitHandler(); // Call the async function
   }
 
   return (
@@ -81,7 +102,11 @@ export default function Login() {
               )}
             />
             <div className="flex justify-center">
-              <Button type="submit" className="w-full font-semibold ">
+              <Button
+                type="submit"
+                className="w-full font-semibold"
+                disabled={loading}
+              >
                 Submit
               </Button>
             </div>
