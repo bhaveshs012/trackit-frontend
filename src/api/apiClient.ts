@@ -31,26 +31,15 @@ apiClient.interceptors.response.use(
       originalRequest._retry = true;
 
       try {
-        const refreshToken = Cookies.get("refreshToken");
-        if (refreshToken) {
-          const response = await axios.post(
-            "http://localhost:8000/api/v1/users/refresh-token",
-            { refreshToken: refreshToken },
-            { withCredentials: true }
-          );
+        const response = await axios.post(
+          "http://localhost:8000/api/v1/users/refresh-token",
+          { withCredentials: true }
+        );
+        const newAccessToken = response.data.data.accessToken;
+        Cookies.set("accessToken", newAccessToken);
+        originalRequest.headers["Authorization"] = `Bearer ${newAccessToken}`;
 
-          const newAccessToken = response.data.data.accessToken;
-          const newRefreshToken = response.data.data.refreshToken;
-
-          Cookies.set("accessToken", newAccessToken);
-          Cookies.set("refreshToken", newRefreshToken);
-
-          originalRequest.headers["Authorization"] = `Bearer ${newAccessToken}`;
-
-          return apiClient(originalRequest);
-        } else {
-          window.location.href = "/login";
-        }
+        return apiClient(originalRequest);
       } catch (refreshError) {
         window.location.href = "/login";
       }

@@ -1,6 +1,14 @@
 import App from "@/App";
 import { createBrowserRouter } from "react-router-dom";
-import { Login, Signup, LandingPage, Home } from "@/pages";
+import {
+  Login,
+  Signup,
+  LandingPage,
+  Home,
+  Interviews,
+  Resumes,
+  Contacts,
+} from "@/pages";
 import ProtectedRoute from "@/wrappers/ProtectedRoute";
 import PublicRoute from "@/wrappers/PublicRoute";
 
@@ -41,6 +49,36 @@ const router = createBrowserRouter(
             {
               path: "",
               element: <Home />,
+            },
+          ],
+        },
+        {
+          path: "interviews",
+          element: <ProtectedRoute redirectTo="/login" />,
+          children: [
+            {
+              path: "",
+              element: <Interviews />,
+            },
+          ],
+        },
+        {
+          path: "resumes",
+          element: <ProtectedRoute redirectTo="/login" />,
+          children: [
+            {
+              path: "",
+              element: <Resumes />,
+            },
+          ],
+        },
+        {
+          path: "contacts",
+          element: <ProtectedRoute redirectTo="/login" />,
+          children: [
+            {
+              path: "",
+              element: <Contacts />,
             },
           ],
         },

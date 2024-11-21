@@ -18,6 +18,8 @@ import SubHeading from "@/components/typography/SubHeading";
 import { useDispatch, useSelector } from "react-redux";
 import { loginSuccess, setLoading } from "@/features/authSlice";
 import apiClient from "@/api/apiClient";
+import Cookies from "js-cookie";
+import { useNavigate } from "react-router-dom";
 
 const FormSchema = z.object({
   email: z.string().email("Enter a valid email !!"),
@@ -38,6 +40,7 @@ export default function Login() {
   //* Redux states
   const dispatch = useDispatch();
   const { loading } = useSelector((state: any) => state.auth);
+  const navigate = useNavigate();
 
   function onSubmit(values: z.infer<typeof FormSchema>) {
     const submitHandler = async () => {
@@ -48,6 +51,7 @@ export default function Login() {
           password: values.password,
         });
         dispatch(loginSuccess(response.data.data));
+        navigate("/home");
       } catch (error) {
         console.error("Login failed:", error);
       } finally {
@@ -113,7 +117,10 @@ export default function Login() {
           </form>
         </Form>
         <p className="text-sm text-muted-foreground text-center">
-          Not Registered yet? <span className="underline">Sign up</span>
+          Not Registered yet?{" "}
+          <span className="underline" onClick={() => navigate("/signup")}>
+            Sign up
+          </span>
         </p>
       </div>
     </div>

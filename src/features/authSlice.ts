@@ -21,7 +21,6 @@ const authSlice = createSlice({
       state.refreshToken = action.payload.refreshToken;
       state.isAuthenticated = true;
       Cookies.set("accessToken", action.payload.accessToken);
-      Cookies.set("refreshToken", action.payload.refreshToken);
     },
     logout: (state) => {
       state.user = null;
@@ -29,7 +28,6 @@ const authSlice = createSlice({
       state.refreshToken = null;
       state.isAuthenticated = false;
       Cookies.remove("accessToken");
-      Cookies.remove("refreshToken");
     },
     setLoading: (state, action) => {
       state.loading = action.payload;
