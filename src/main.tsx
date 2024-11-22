@@ -5,11 +5,17 @@ import { Provider } from "react-redux";
 import store from "./store.ts";
 import { RouterProvider } from "react-router-dom";
 import router from "./routes/Routes.tsx";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+
+// Create a client
+const queryClient = new QueryClient();
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <Provider store={store}>
-      <RouterProvider router={router} future={{ v7_startTransition: true }} />
+      <QueryClientProvider client={queryClient}>
+        <RouterProvider router={router} future={{ v7_startTransition: true }} />
+      </QueryClientProvider>
     </Provider>
   </StrictMode>
 );

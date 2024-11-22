@@ -5,7 +5,6 @@ interface ContactModel {
   position: string;
   phoneNumber: string;
   linkedinProfile: string;
-  avatarUrl?: string;
 }
 
 export default ContactModel;

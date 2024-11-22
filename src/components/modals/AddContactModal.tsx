@@ -17,6 +17,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { useQueryClient } from "@tanstack/react-query";
 
 //* Form Schema
 const FormSchema = z.object({
@@ -59,6 +60,10 @@ function AddContactModal() {
       phoneNumber: "",
     },
   });
+
+  //* React Query Client 
+  const queryClient = useQueryClient();
+  
 
   function onSubmit(values: z.infer<typeof FormSchema>) {
     console.log(values);
