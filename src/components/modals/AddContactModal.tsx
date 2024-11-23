@@ -17,7 +17,10 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import ContactModel from "@/pages/contacts/models/contact.model";
+import apiClient from "@/api/apiClient";
+import { toast } from "@/hooks/use-toast";
 
 //* Form Schema
 const FormSchema = z.object({
@@ -47,7 +50,11 @@ const FormSchema = z.object({
     ),
 });
 
-function AddContactModal() {
+interface AddContactModalProps {
+  onClose: () => void; // Explicit type for the onClose prop
+}
+
+const AddContactModal: React.FC<AddContactModalProps> = ({ onClose }) => {
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
@@ -61,12 +68,42 @@ function AddContactModal() {
     },
   });
 
-  //* React Query Client 
+  //* React Query Client
   const queryClient = useQueryClient();
-  
+
+  const addNewContact = async (newContact: ContactModel) => {
+    const response = await apiClient.post("/contacts", newContact);
+    return response.data.data;
+  };
+
+  const mutation = useMutation({
+    mutationFn: addNewContact,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["getAllContacts"] });
+      toast({
+        title: "Contact has been added successfully !!",
+      });
+      onClose();
+    },
+    onError(error, variables, context) {
+      toast({
+        title: "Error occurred while adding contact !!",
+        description: error.toString(),
+      });
+    },
+  });
 
   function onSubmit(values: z.infer<typeof FormSchema>) {
-    console.log(values);
+    const newContact = {
+      firstName: values.firstName,
+      lastName: values.lastName,
+      email: values.email,
+      companyName: values.companyName,
+      role: values.role,
+      phoneNumber: values.phoneNumber,
+      linkedInProfile: values.linkedInProfile,
+    };
+    mutation.mutate(newContact);
   }
 
   return (
@@ -197,6 +234,6 @@ function AddContactModal() {
       </div>
     </DialogContent>
   );
-}
+};
 
 export default AddContactModal;

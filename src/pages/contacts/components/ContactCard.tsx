@@ -4,29 +4,24 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import ContactModel from "../models/contact.model";
 
 export default function ContactCard({
-  name,
+  firstName,
+  lastName,
   email,
   companyName,
-  position,
+  role,
   phoneNumber,
-  linkedinProfile,
+  linkedInProfile,
 }: ContactModel) {
   return (
-    <Card className="w-full max-w-md mx-auto mb-6 last:mb-0">
+    <Card className="w-full max-w-md m-4 mb-6">
       <CardHeader className="flex flex-row items-center gap-4">
         <Avatar className="w-16 h-16">
-          <AvatarImage alt={name} />
-          <AvatarFallback>
-            {name
-              .split(" ")
-              .map((n) => n[0])
-              .join("")
-              .toUpperCase()}
-          </AvatarFallback>
+          <AvatarImage alt={firstName} />
+          <AvatarFallback>{firstName[0] + lastName[0]}</AvatarFallback>
         </Avatar>
         <div>
-          <CardTitle>{name}</CardTitle>
-          <p className="text-sm text-muted-foreground">{position}</p>
+          <CardTitle>{firstName + " " + lastName}</CardTitle>
+          <p className="text-sm text-muted-foreground">{role}</p>
         </div>
       </CardHeader>
       <CardContent className="grid gap-4">
@@ -49,7 +44,7 @@ export default function ContactCard({
         <div className="flex items-center gap-2">
           <Linkedin className="h-4 w-4 text-muted-foreground" />
           <a
-            href={linkedinProfile}
+            href={linkedInProfile}
             target="_blank"
             rel="noopener noreferrer"
             className="text-primary hover:underline"

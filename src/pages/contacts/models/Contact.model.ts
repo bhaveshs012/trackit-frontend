@@ -1,10 +1,11 @@
 interface ContactModel {
-  name: string;
+  firstName: string;
+  lastName: string;
   email: string;
   companyName: string;
-  position: string;
+  role: string;
   phoneNumber: string;
-  linkedinProfile: string;
+  linkedInProfile: string;
 }
 
 export default ContactModel;
