@@ -90,6 +90,7 @@ const AddContactModal: React.FC<AddContactModalProps> = ({ onClose }) => {
         title: "Error occurred while adding contact !!",
         description: error.toString(),
       });
+      onClose();
     },
   });
 

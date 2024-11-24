@@ -28,6 +28,13 @@ import {
   convertDateToInputString,
   convertInputStringToDate,
 } from "@/utils/input_date_formatter";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  InterviewRound,
+  ScheduledInterviewModel,
+} from "@/pages/interviews/models/interview.model";
+import apiClient from "@/api/apiClient";
+import { toast } from "@/hooks/use-toast";
 
 //* Form Schema
 const FormSchema = z
@@ -77,7 +84,13 @@ const interviewRoundEnum = {
   OTHER: "Other",
 };
 
-function AddInterviewScheduleModal() {
+interface AddInterviewScheduleModalProps {
+  onClose: () => void; // Explicit type for the onClose prop
+}
+
+const AddInterviewScheduleModal: React.FC<AddInterviewScheduleModalProps> = ({
+  onClose,
+}) => {
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
@@ -89,8 +102,42 @@ function AddInterviewScheduleModal() {
     },
   });
 
+  //* React Query Client
+  const queryClient = useQueryClient();
+
+  const addNewInterviewSchedule = async (
+    newInterviewSchedule: ScheduledInterviewModel
+  ) => {
+    const response = await apiClient.post("/interviews", newInterviewSchedule);
+    return response.data.data;
+  };
+
+  const mutation = useMutation({
+    mutationFn: addNewInterviewSchedule,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["getAllInterviews"] });
+      toast({
+        title: "Schedule has been saved successfully !!",
+      });
+      onClose();
+    },
+    onError(error, variables, context) {
+      toast({
+        title: "Error occurred while saving the schedule !!",
+        description: error.toString(),
+      });
+      onClose();
+    },
+  });
+
   function onSubmit(values: z.infer<typeof FormSchema>) {
-    console.log(values);
+    const newInterviewSchedule: ScheduledInterviewModel = {
+      position: values.position,
+      companyName: values.companyName,
+      interviewRound: values.interviewRound,
+      scheduledOn: convertInputStringToDate(values.scheduledOn),
+    };
+    mutation.mutate(newInterviewSchedule);
   }
 
   return (
@@ -196,6 +243,6 @@ function AddInterviewScheduleModal() {
       </div>
     </DialogContent>
   );
-}
+};
 
 export default AddInterviewScheduleModal;

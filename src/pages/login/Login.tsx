@@ -18,8 +18,8 @@ import SubHeading from "@/components/typography/SubHeading";
 import { useDispatch, useSelector } from "react-redux";
 import { loginSuccess, setLoading } from "@/features/authSlice";
 import apiClient from "@/api/apiClient";
-import Cookies from "js-cookie";
 import { useNavigate } from "react-router-dom";
+import { toast } from "@/hooks/use-toast";
 
 const FormSchema = z.object({
   email: z.string().email("Enter a valid email !!"),
@@ -52,8 +52,13 @@ export default function Login() {
         });
         dispatch(loginSuccess(response.data.data));
         navigate("/home");
-      } catch (error) {
-        console.error("Login failed:", error);
+      } catch (error: any) {
+        const errorMessage =
+          error.response?.data?.message || "An error occurred";
+        toast({
+          title: "Error occurred !!",
+          description: errorMessage,
+        });
       } finally {
         dispatch(setLoading(false));
       }

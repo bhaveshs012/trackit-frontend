@@ -3,8 +3,5 @@ export const formatDate = (date: Date) => {
     weekday: "short",
     month: "short",
     day: "numeric",
-    hour: "numeric",
-    minute: "numeric",
-    hour12: true,
   });
 };

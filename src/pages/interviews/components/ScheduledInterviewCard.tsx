@@ -2,11 +2,8 @@ import { CalendarDays, Building, ChevronRight } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  ScheduledInterviewModel,
-  InterviewRound,
-} from "../models/interview.model";
-import { formatDate } from "@/utils/format_date";
+import { ScheduledInterviewModel } from "../models/interview.model";
+import { convertISODateToString } from "@/utils/input_date_formatter";
 export default function ScheduledInterviewCard({
   position,
   companyName,
@@ -15,19 +12,19 @@ export default function ScheduledInterviewCard({
 }: ScheduledInterviewModel) {
   //* Helper Functions
 
-  const getRoundIcon = (round: InterviewRound) => {
+  const getRoundIcon = (round: String) => {
     switch (round) {
-      case "PHONE_SCREENING":
+      case "Phone Screening":
         return "📞";
-      case "TECHNICAL_INTERVIEW":
+      case "Technical Interview":
         return "💻";
-      case "HR_INTERVIEW":
+      case "HR Interview":
         return "👥";
-      case "ON_SITE":
+      case "On-Site":
         return "🏢";
-      case "FINAL_ROUND":
+      case "FInal Round":
         return "🏁";
-      case "OFFER_DISCUSSION":
+      case "Offer Discussion":
         return "💼";
       default:
         return "❓";
@@ -35,7 +32,7 @@ export default function ScheduledInterviewCard({
   };
 
   return (
-    <Card className="w-full max-w-md mx-auto mb-6 last:mb-0">
+    <Card className="w-full max-w-md mb-6">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-lg font-bold">{position}</CardTitle>
         <Badge variant="secondary" className="text-xs">
@@ -53,7 +50,7 @@ export default function ScheduledInterviewCard({
           </div>
           <div className="flex items-center space-x-2 text-sm">
             <CalendarDays className="h-4 w-4 opacity-70" />
-            <span>{formatDate(scheduledOn)}</span>
+            <span>{convertISODateToString(scheduledOn.toString())}</span>
           </div>
           <Button variant="outline" className="mt-4 w-full">
             View Details

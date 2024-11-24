@@ -3,7 +3,6 @@ import Heading from "@/components/typography/Heading";
 import { Button } from "@/components/ui/button";
 import { CircleUserRound } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import contacts from "./data/dummy_contacts";
 import ContactModel from "./models/contact.model";
 import ContactCard from "./components/ContactCard";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
@@ -12,6 +11,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import apiClient from "@/api/apiClient";
 import LoadingScreen from "../common/LoadingScreen";
 import Pagination from "@/components/pagination/Pagination";
+import EmptyResultsScreen from "../common/EmptyResults";
 
 function Contacts() {
   const [isOpen, setIsOpen] = useState(false);
@@ -62,7 +62,7 @@ function Contacts() {
         </div>
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
           <DialogTrigger asChild>
-            <Button variant={"outline"}>
+            <Button className="z-10" variant={"outline"}>
               <div className="flex gap-x-4 items-center">
                 <CircleUserRound />
                 <p>Add New Contact</p>
@@ -74,13 +74,17 @@ function Contacts() {
       </div>
       {/* Contact Cards Section */}
       <div className="flex w-full flex-wrap">
-        {data.length === 0 ? (
-          <p>No Contacts added</p>
+        {data && data.length === 0 ? (
+          <EmptyResultsScreen
+            title="No Contacts Found !!"
+            description="Please save some contacts to view them here"
+          />
         ) : (
-          data.map((contact: ContactModel) => {
+          data &&
+          data.map((contact: ContactModel, index: number) => {
             return (
               <ContactCard
-                key={contact.email}
+                key={String(index)}
                 firstName={contact.firstName}
                 lastName={contact.lastName}
                 companyName={contact.companyName}
@@ -93,12 +97,14 @@ function Contacts() {
           })
         )}
       </div>
-      <Pagination
-        currentPage={currentPage}
-        totalItems={totalItems}
-        itemsPerPage={itemsPerPage}
-        onPageChange={handlePageChange}
-      />
+      {data && data.length !== 0 && (
+        <Pagination
+          currentPage={currentPage}
+          totalItems={totalItems}
+          itemsPerPage={itemsPerPage}
+          onPageChange={handlePageChange}
+        />
+      )}
     </div>
   );
 }
