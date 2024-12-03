@@ -11,6 +11,8 @@ import {
 } from "@/pages";
 import ProtectedRoute from "@/wrappers/ProtectedRoute";
 import PublicRoute from "@/wrappers/PublicRoute";
+import ErrorScreen from "@/pages/common/ErrorScreen";
+import PageNotFound from "@/pages/common/PageNotFound";
 
 const router = createBrowserRouter(
   [
@@ -81,6 +83,19 @@ const router = createBrowserRouter(
               element: <Contacts />,
             },
           ],
+        },
+        {
+          path: "error",
+          element: (
+            <ErrorScreen
+              title="Some error occurred !!"
+              description="Please try again later"
+            />
+          ),
+        },
+        {
+          path: "*",
+          element: <PageNotFound />,
         },
       ],
     },

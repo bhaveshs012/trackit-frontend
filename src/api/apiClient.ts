@@ -9,7 +9,6 @@ const apiClient = axios.create({
 apiClient.interceptors.request.use(
   (config) => {
     const accessToken = Cookies.get("accessToken");
-
     if (accessToken) {
       config.headers["Authorization"] = `Bearer ${accessToken}`;
     }
@@ -37,8 +36,8 @@ apiClient.interceptors.response.use(
           { withCredentials: true }
         );
         const newAccessToken = response.data.data.accessToken;
-        Cookies.set("accessToken", newAccessToken);
         originalRequest.headers["Authorization"] = `Bearer ${newAccessToken}`;
+        Cookies.set("accessToken", newAccessToken);
 
         return apiClient(originalRequest);
       } catch (refreshError) {
