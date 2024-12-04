@@ -20,6 +20,9 @@ import {
 } from "@/components/ui/form";
 import { Badge } from "@/components/ui/badge";
 import { X } from "lucide-react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import apiClient from "@/api/apiClient";
+import { toast } from "@/hooks/use-toast";
 
 //* Form Schema
 const FormSchema = z.object({
@@ -36,7 +39,11 @@ const FormSchema = z.object({
     }),
 });
 
-function AddResumeModal() {
+interface AddResumeModalProps {
+  onClose: () => void; // Explicit type for the onClose prop
+}
+
+const AddResumeModal: React.FC<AddResumeModalProps> = ({ onClose }) => {
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
@@ -50,6 +57,7 @@ function AddResumeModal() {
 
   //* Skills State (Managed through form state now)
   const [inputValue, setInputValue] = useState("");
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const skills = watch("skills"); //* this gets the value from the form and updates when changed
 
@@ -74,8 +82,48 @@ function AddResumeModal() {
     }
   };
 
+  //* React Query Client
+  const queryClient = useQueryClient();
+  const addNewResume = async (newResume: {
+    targetPosition: string;
+    skills: string;
+    resume: File;
+  }) => {
+    setIsLoading(true);
+    let formData = new FormData();
+    formData.append("targetPosition", newResume.targetPosition);
+    formData.append("skills", newResume.skills);
+    formData.append("resume", newResume.resume);
+    const response = await apiClient.post("/users/resume", formData);
+    setIsLoading(false);
+    return response.data.data;
+  };
+
+  const mutation = useMutation({
+    mutationFn: addNewResume,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["getAllResumes"] });
+      toast({
+        title: "Resume has been saved successfully !!",
+      });
+      onClose();
+    },
+    onError(error, variables, context) {
+      toast({
+        title: "Error occurred while saving the resume !!",
+        description: error.toString(),
+      });
+      onClose();
+    },
+  });
+
   function onSubmit(values: z.infer<typeof FormSchema>) {
-    console.log("Form Submitted", values);
+    const newResume = {
+      skills: JSON.stringify(values.skills),
+      targetPosition: values.targetPosition,
+      resume: values.resume,
+    };
+    mutation.mutate(newResume);
   }
 
   //* Resume Upload Handler
@@ -172,7 +220,7 @@ function AddResumeModal() {
               )}
             />
             {/* Submit Button */}
-            <Button type="submit" className="w-full">
+            <Button type="submit" className="w-full" disabled={isLoading}>
               Add Resume
             </Button>
           </form>
@@ -180,6 +228,6 @@ function AddResumeModal() {
       </div>
     </DialogContent>
   );
-}
+};
 
 export default AddResumeModal;

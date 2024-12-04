@@ -22,10 +22,10 @@ apiClient.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    // Check for 401 error and retry only once
+    // Check for 401 error
     if (
-      error.response &&
-      error.response.status === 401 &&
+      ((error.response && error.response.status === 401) ||
+        error.response.data?.message === "jwt expired") &&
       !originalRequest._retry
     ) {
       originalRequest._retry = true;
@@ -33,14 +33,18 @@ apiClient.interceptors.response.use(
       try {
         const response = await axios.post(
           "http://localhost:8000/api/v1/users/refresh-token",
-          { withCredentials: true }
+          { withCredentials: true } // Ensure this sends the cookies
         );
+
         const newAccessToken = response.data.data.accessToken;
-        originalRequest.headers["Authorization"] = `Bearer ${newAccessToken}`;
         Cookies.set("accessToken", newAccessToken);
 
+        // Retry original request with new token
+        originalRequest.headers["Authorization"] = `Bearer ${newAccessToken}`;
         return apiClient(originalRequest);
-      } catch (refreshError) {
+      } catch (refreshError: any) {
+        Cookies.remove("accessToken");
+        Cookies.remove("refreshToken");
         window.location.href = "/login";
       }
     }

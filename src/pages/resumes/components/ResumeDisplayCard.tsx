@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CalendarIcon, FileIcon, ExternalLinkIcon } from "lucide-react";
 import ResumeModel from "../models/resume.model";
-import { formatDate } from "@/utils/format_date";
+import { convertISODateToString } from "@/utils/input_date_formatter";
 
 export default function ResumeDisplayCard({
   fileName,
@@ -42,7 +42,7 @@ export default function ResumeDisplayCard({
           </div>
           <div className="flex items-center text-sm text-muted-foreground">
             <CalendarIcon className="w-4 h-4 mr-2" />
-            Added on {formatDate(uploadedOn)}
+            Added on {convertISODateToString(uploadedOn.toString())}
           </div>
         </CardContent>
       </div>
