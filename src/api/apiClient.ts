@@ -37,14 +37,11 @@ apiClient.interceptors.response.use(
         );
 
         const newAccessToken = response.data.data.accessToken;
-        Cookies.set("accessToken", newAccessToken);
 
         // Retry original request with new token
         originalRequest.headers["Authorization"] = `Bearer ${newAccessToken}`;
         return apiClient(originalRequest);
       } catch (refreshError: any) {
-        Cookies.remove("accessToken");
-        Cookies.remove("refreshToken");
         window.location.href = "/login";
       }
     }
