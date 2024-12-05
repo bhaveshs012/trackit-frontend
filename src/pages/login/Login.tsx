@@ -51,7 +51,7 @@ export default function Login() {
           password: values.password,
         });
         dispatch(loginSuccess(response.data.data));
-        navigate("/home");
+        navigate("/dashboard");
       } catch (error: any) {
         const errorMessage =
           error.response?.data?.message || "An error occurred";

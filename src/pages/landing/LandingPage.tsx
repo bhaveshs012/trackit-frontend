@@ -40,7 +40,10 @@ function LandingPage() {
                   Stay organized, manage your applications, and never miss an
                   opportunity.
                 </p>
-                <Button variant="outline" onClick={() => navigate("/home")}>
+                <Button
+                  variant="outline"
+                  onClick={() => navigate("/dashboard")}
+                >
                   Get Started
                 </Button>
               </div>

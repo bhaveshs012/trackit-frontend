@@ -4,15 +4,18 @@ import { useEffect, useState } from "react";
 import { Navigate, Outlet } from "react-router-dom";
 
 const PublicRoute = ({ redirectTo = "/home" }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
 
   useEffect(() => {
-    apiClient.get("/users/validate-token").then(() => {
-      setIsAuthenticated(true);
-    });
+    apiClient
+      .get("/users/validate-token")
+      .then(() => {
+        setIsAuthenticated(true);
+      })
+      .catch(() => setIsAuthenticated(false));
   }, []);
 
-  if (!isAuthenticated) {
+  if (isAuthenticated === null) {
     return <LoadingScreen />;
   }
 

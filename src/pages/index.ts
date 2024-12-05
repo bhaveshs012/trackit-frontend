@@ -5,4 +5,14 @@ import LandingPage from "./landing/LandingPage";
 import Interviews from "./interviews/Interviews";
 import Resumes from "./resumes/Resumes";
 import Contacts from "./contacts/Contacts";
-export { Login, Signup, Home, LandingPage, Interviews, Resumes, Contacts };
+import Dashboard from "./dashboard/Dashboard";
+export {
+  Login,
+  Signup,
+  Home,
+  LandingPage,
+  Interviews,
+  Resumes,
+  Contacts,
+  Dashboard,
+};

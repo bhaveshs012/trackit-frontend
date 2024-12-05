@@ -8,6 +8,7 @@ import {
   Interviews,
   Resumes,
   Contacts,
+  Dashboard,
 } from "@/pages";
 import ProtectedRoute from "@/wrappers/ProtectedRoute";
 import PublicRoute from "@/wrappers/PublicRoute";
@@ -45,46 +46,6 @@ const router = createBrowserRouter(
           ],
         },
         {
-          path: "home",
-          element: <ProtectedRoute redirectTo="/login" />,
-          children: [
-            {
-              path: "",
-              element: <Home />,
-            },
-          ],
-        },
-        {
-          path: "interviews",
-          element: <ProtectedRoute redirectTo="/login" />,
-          children: [
-            {
-              path: "",
-              element: <Interviews />,
-            },
-          ],
-        },
-        {
-          path: "resumes",
-          element: <ProtectedRoute redirectTo="/login" />,
-          children: [
-            {
-              path: "",
-              element: <Resumes />,
-            },
-          ],
-        },
-        {
-          path: "contacts",
-          element: <ProtectedRoute redirectTo="/login" />,
-          children: [
-            {
-              path: "",
-              element: <Contacts />,
-            },
-          ],
-        },
-        {
           path: "error",
           element: (
             <ErrorScreen
@@ -92,6 +53,48 @@ const router = createBrowserRouter(
               description="Please try again later"
             />
           ),
+        },
+        {
+          path: "dashboard",
+          element: (
+            <ProtectedRoute redirectTo="/login">
+              <Dashboard />,
+            </ProtectedRoute>
+          ),
+          children: [
+            {
+              path: "",
+              element: (
+                <ProtectedRoute redirectTo="/login">
+                  <Home />
+                </ProtectedRoute>
+              ),
+            },
+            {
+              path: "interviews",
+              element: (
+                <ProtectedRoute redirectTo="/login">
+                  <Interviews />
+                </ProtectedRoute>
+              ),
+            },
+            {
+              path: "resumes",
+              element: (
+                <ProtectedRoute redirectTo="/login">
+                  <Resumes />
+                </ProtectedRoute>
+              ),
+            },
+            {
+              path: "contacts",
+              element: (
+                <ProtectedRoute redirectTo="/login">
+                  <Contacts />
+                </ProtectedRoute>
+              ),
+            },
+          ],
         },
         {
           path: "*",

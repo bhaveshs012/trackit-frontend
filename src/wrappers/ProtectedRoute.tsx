@@ -1,28 +1,45 @@
 import apiClient from "@/api/apiClient";
 import LoadingScreen from "@/pages/common/LoadingScreen";
 import { useEffect, useState } from "react";
+import { Navigate } from "react-router-dom";
+import { ReactNode } from "react";
 
-import { Navigate, Outlet } from "react-router-dom";
+interface ProtectedRouteProps {
+  children: ReactNode;
+  redirectTo?: string;
+}
 
-const ProtectedRoute = ({ redirectTo = "/login" }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
+  children,
+  redirectTo = "/login",
+}) => {
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
 
   useEffect(() => {
-    apiClient
-      .get("/users/validate-token")
-      .then(() => {
+    const validateToken = async () => {
+      try {
+        await apiClient.get("/users/validate-token");
         setIsAuthenticated(true);
-      })
-      .catch(() => {
-        window.location.href = "/login";
-      });
+      } catch (error) {
+        setIsAuthenticated(false);
+      }
+    };
+
+    validateToken();
   }, []);
 
-  if (!isAuthenticated) {
+  // Show a loading screen while the authentication status is being determined.
+  if (isAuthenticated === null) {
     return <LoadingScreen />;
   }
 
-  return isAuthenticated ? <Outlet /> : <Navigate to={redirectTo} />;
+  // Redirect to the login page if not authenticated.
+  if (!isAuthenticated) {
+    return <Navigate to={redirectTo} replace />;
+  }
+
+  // Render the children if authenticated.
+  return <>{children}</>;
 };
 
 export default ProtectedRoute;
