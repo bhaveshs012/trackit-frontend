@@ -27,7 +27,7 @@ const router = createBrowserRouter(
         },
         {
           path: "login",
-          element: <PublicRoute redirectTo="/home" />,
+          element: <PublicRoute redirectTo="/dashboard" />,
           children: [
             {
               path: "",
@@ -37,7 +37,7 @@ const router = createBrowserRouter(
         },
         {
           path: "signup",
-          element: <PublicRoute redirectTo="/home" />,
+          element: <PublicRoute redirectTo="/dashboard" />,
           children: [
             {
               path: "",

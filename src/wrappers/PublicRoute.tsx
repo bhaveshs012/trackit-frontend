@@ -3,16 +3,20 @@ import LoadingScreen from "@/pages/common/LoadingScreen";
 import { useEffect, useState } from "react";
 import { Navigate, Outlet } from "react-router-dom";
 
-const PublicRoute = ({ redirectTo = "/home" }) => {
+const PublicRoute = ({ redirectTo = "/dashboard" }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
 
   useEffect(() => {
-    apiClient
-      .get("/users/validate-token")
-      .then(() => {
+    const validateToken = async () => {
+      try {
+        await apiClient.get("/users/validate-token");
         setIsAuthenticated(true);
-      })
-      .catch(() => setIsAuthenticated(false));
+      } catch {
+        setIsAuthenticated(false);
+      }
+    };
+
+    validateToken();
   }, []);
 
   if (isAuthenticated === null) {

@@ -1,5 +1,4 @@
 import axios from "axios";
-import Cookies from "js-cookie";
 
 const apiClient = axios.create({
   baseURL: "http://localhost:8000/api/v1",
@@ -8,10 +7,6 @@ const apiClient = axios.create({
 
 apiClient.interceptors.request.use(
   (config) => {
-    const accessToken = Cookies.get("accessToken");
-    if (accessToken) {
-      config.headers["Authorization"] = `Bearer ${accessToken}`;
-    }
     return config;
   },
   (error) => Promise.reject(error)
@@ -24,8 +19,8 @@ apiClient.interceptors.response.use(
 
     // Check for 401 error
     if (
-      ((error.response && error.response.status === 401) ||
-        error.response.data?.message === "jwt expired") &&
+      error.response &&
+      error.response.status === 401 &&
       !originalRequest._retry
     ) {
       originalRequest._retry = true;
