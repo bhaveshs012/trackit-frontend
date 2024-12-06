@@ -2,7 +2,7 @@ import SubHeading from "@/components/typography/SubHeading";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Form,
   FormControl,
@@ -23,6 +23,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import apiClient from "@/api/apiClient";
+import { useQuery } from "@tanstack/react-query";
+import LoadingScreen from "../common/LoadingScreen";
+import ErrorScreen from "../common/ErrorScreen";
 
 const userDetailsFormSchema = z.object({
   firstName: z
@@ -55,22 +59,69 @@ const experienceLevelEnum = {
 
 function Profile() {
   //* Get the user details from the backend
+  const getUserDetails = async () => {
+    const response = await apiClient.get("/users/current-user");
+    return response.data.data;
+  };
+
+  const {
+    data: currentUser,
+    error,
+    isLoading,
+  } = useQuery({
+    queryKey: ["getUserDetails"],
+    queryFn: getUserDetails,
+  });
 
   //* Set the default values
   const form = useForm<z.infer<typeof userDetailsFormSchema>>({
     resolver: zodResolver(userDetailsFormSchema),
     defaultValues: {
-      email: "bhavesh@email.com",
-      firstName: "Bhavesh",
-      lastName: "Sengunthar",
+      email: currentUser?.email || "",
+      firstName: currentUser?.firstName || "",
+      lastName: currentUser?.lastName || "",
       phoneNumber: "",
-      skills: [],
-      aspiringRole: "",
-      experienceLevel: "Entry",
+      skills: currentUser?.skills || [],
+      aspiringRole: currentUser?.aspiringRole || "",
+      experienceLevel: currentUser?.experienceLevel || "Entry",
     },
   });
 
-  const { handleSubmit, setValue, watch } = form;
+  const { handleSubmit, setValue, watch, reset } = form;
+
+  useEffect(() => {
+    if (currentUser) {
+      reset({
+        email: currentUser.email,
+        firstName: currentUser.firstName,
+        lastName: currentUser.lastName,
+        phoneNumber: currentUser.phoneNumber || "",
+        skills: currentUser.skills || [],
+        aspiringRole: currentUser.aspiringRole || "",
+        experienceLevel: currentUser.experienceLevel || "Entry",
+      });
+    }
+  }, [currentUser, reset]);
+
+  //* Check if form state has changed
+  const [valuesChanged, setValuesChanged] = useState<boolean>(false);
+
+  const checkForChange = () => {
+    if (currentUser) {
+      const hasChanged = Object.entries(form.getValues()).some(
+        ([key, value]) => {
+          return (
+            currentUser[key] && value.toString() !== currentUser[key].toString()
+          );
+        }
+      );
+      setValuesChanged(hasChanged);
+    }
+  };
+
+  useEffect(() => {
+    checkForChange();
+  }, [watch()]);
 
   //* Input State for managing the skills
   const [inputValue, setInputValue] = useState("");
@@ -101,6 +152,9 @@ function Profile() {
   const onSubmit = (values: z.infer<typeof userDetailsFormSchema>) => {
     console.log(values);
   };
+
+  if (isLoading) return <LoadingScreen />;
+  if (error) return <ErrorScreen title="" description="" />;
 
   return (
     <div className="flex justify-start flex-col min-h-screen p-6 gap-y-6">
@@ -255,7 +309,11 @@ function Profile() {
             />
 
             <div className="flex justify-center">
-              <Button type="submit" className="w-full font-semibold" disabled>
+              <Button
+                type="submit"
+                className="w-full font-semibold"
+                disabled={!valuesChanged}
+              >
                 Update Profile
               </Button>
             </div>
