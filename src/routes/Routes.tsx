@@ -9,6 +9,7 @@ import {
   Resumes,
   Contacts,
   Dashboard,
+  Profile,
 } from "@/pages";
 import ProtectedRoute from "@/wrappers/ProtectedRoute";
 import PublicRoute from "@/wrappers/PublicRoute";
@@ -91,6 +92,14 @@ const router = createBrowserRouter(
               element: (
                 <ProtectedRoute redirectTo="/login">
                   <Contacts />
+                </ProtectedRoute>
+              ),
+            },
+            {
+              path: "profile",
+              element: (
+                <ProtectedRoute redirectTo="/login">
+                  <Profile />
                 </ProtectedRoute>
               ),
             },

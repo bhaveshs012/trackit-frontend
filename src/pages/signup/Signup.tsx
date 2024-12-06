@@ -355,7 +355,7 @@ export default function Signup() {
                     >
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select an interview round" />
+                          <SelectValue placeholder="Select an experience level" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>

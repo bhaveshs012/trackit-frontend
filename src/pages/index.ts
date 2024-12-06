@@ -6,6 +6,7 @@ import Interviews from "./interviews/Interviews";
 import Resumes from "./resumes/Resumes";
 import Contacts from "./contacts/Contacts";
 import Dashboard from "./dashboard/Dashboard";
+import Profile from "./profile/Profile";
 export {
   Login,
   Signup,
@@ -15,4 +16,5 @@ export {
   Resumes,
   Contacts,
   Dashboard,
+  Profile,
 };
