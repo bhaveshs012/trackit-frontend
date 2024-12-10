@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { PlusCircle } from "lucide-react";
+import { ArchiveIcon, MoveLeft, PlusCircle } from "lucide-react";
 import Heading from "@/components/typography/Heading";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -12,14 +12,20 @@ import EmptyResultsScreen from "../common/EmptyResults";
 import Pagination from "@/components/pagination/Pagination";
 import apiClient from "@/api/apiClient";
 import { ScheduledInterviewModel } from "./models/interview.model";
+import { useNavigate } from "react-router-dom";
 
-function Interviews() {
+interface InterviewsPageProps {
+  displayArchived: boolean;
+}
+
+const Interviews: React.FC<InterviewsPageProps> = ({ displayArchived }) => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [totalItems, setTotalItems] = useState<number>(0);
   const itemsPerPage = 10;
 
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   const handleDialogClose = () => setIsOpen(false);
 
@@ -30,8 +36,11 @@ function Interviews() {
     });
   };
 
-  const getAllInterviews = async () => {
-    const response = await apiClient.get("/interviews", {
+  async function getAllInterviews(displayArchived: boolean): Promise<any> {
+    let url = "/interviews";
+    if (displayArchived) url = url + "/archived";
+
+    const response = await apiClient.get(url, {
       params: {
         page: currentPage,
         limit: itemsPerPage,
@@ -40,11 +49,13 @@ function Interviews() {
 
     setTotalItems(response.data.data.pagination.totalDocs);
     return response.data.data.interviewRounds;
-  };
+  }
 
   const { data, error, isLoading } = useQuery({
-    queryKey: ["getAllInterviews", currentPage],
-    queryFn: getAllInterviews,
+    queryKey: ["getAllInterviews", currentPage, displayArchived],
+    queryFn: () => getAllInterviews(displayArchived),
+    refetchOnMount: true,
+    refetchOnWindowFocus: false,
   });
 
   if (isLoading) return <LoadingScreen />;
@@ -59,22 +70,64 @@ function Interviews() {
   return (
     <div className="flex flex-col min-h-screen p-6 gap-y-6">
       {/* Header Section */}
-      <div className="flex flex-row justify-between">
-        <div className="flex gap-x-4 items-center">
-          <Heading title="Interviews" />
+      <div className="flex flex-row justify-between gap-x-4">
+        <div className="flex gap-x-4 gap-y-4 items-center">
+          {displayArchived && (
+            <Button
+              variant={"secondary"}
+              onClick={async () => {
+                // Invalidate query to refresh interviews data
+                await queryClient.invalidateQueries({
+                  queryKey: ["getAllInterviews", currentPage],
+                });
+
+                // Navigate to the archived interviews page
+                navigate("/dashboard/interviews");
+              }}
+            >
+              <MoveLeft />
+            </Button>
+          )}
+          <Heading
+            title={displayArchived ? "Archived Interviews" : "Interviews"}
+          />
           <Badge variant="outline">{totalItems}</Badge>
         </div>
-        <Dialog open={isOpen} onOpenChange={setIsOpen}>
-          <DialogTrigger asChild>
-            <Button className="z-10" variant="outline">
+
+        <div className="flex flex-wrap gap-x-4 gap-y-4 z-10">
+          <div>
+            <Button
+              variant={"outline"}
+              onClick={async () => {
+                // Invalidate query to refresh interviews data
+                await queryClient.invalidateQueries({
+                  queryKey: ["getAllInterviews", currentPage],
+                });
+
+                // Navigate to the archived interviews page
+                navigate("/dashboard/interviews/archived");
+              }}
+            >
               <div className="flex gap-x-4 items-center">
-                <PlusCircle />
-                <p>Add New Schedule</p>
+                <ArchiveIcon />
+                <p>Archived Interviews</p>
               </div>
             </Button>
-          </DialogTrigger>
-          <AddInterviewScheduleModal onClose={handleDialogClose} />
-        </Dialog>
+          </div>
+          <div>
+            <Dialog open={isOpen} onOpenChange={setIsOpen}>
+              <DialogTrigger asChild>
+                <Button className="z-10" variant="outline">
+                  <div className="flex gap-x-4 items-center">
+                    <PlusCircle />
+                    <p>Add New Schedule</p>
+                  </div>
+                </Button>
+              </DialogTrigger>
+              <AddInterviewScheduleModal onClose={handleDialogClose} />
+            </Dialog>
+          </div>
+        </div>
       </div>
 
       {/* Interview Cards Section */}
@@ -109,6 +162,6 @@ function Interviews() {
       )}
     </div>
   );
-}
+};
 
 export default Interviews;

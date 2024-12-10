@@ -141,6 +141,7 @@ export default function Signup() {
         const response = await apiClient.post("/users/register", {
           firstName: values.firstName,
           lastName: values.lastName,
+          phoneNumber: values.phoneNumber,
           email: values.email,
           password: values.password,
           skills: values.skills,

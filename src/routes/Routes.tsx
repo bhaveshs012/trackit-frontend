@@ -1,5 +1,5 @@
 import App from "@/App";
-import { createBrowserRouter } from "react-router-dom";
+import { createBrowserRouter, Outlet } from "react-router-dom";
 import {
   Login,
   Signup,
@@ -75,9 +75,19 @@ const router = createBrowserRouter(
               path: "interviews",
               element: (
                 <ProtectedRoute redirectTo="/login">
-                  <Interviews />
+                  <Outlet />
                 </ProtectedRoute>
               ),
+              children: [
+                {
+                  index: true, // Default route for "/interviews"
+                  element: <Interviews displayArchived={false} />,
+                },
+                {
+                  path: "archived", // Route for "/interviews/archived"
+                  element: <Interviews displayArchived={true} />,
+                },
+              ],
             },
             {
               path: "resumes",
