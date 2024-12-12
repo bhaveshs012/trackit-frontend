@@ -3,15 +3,15 @@ import Heading from "@/components/typography/Heading";
 import { Button } from "@/components/ui/button";
 import { CircleUserRound } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import ContactModel from "./models/contact.model";
 import ContactCard from "./components/ContactCard";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
-import AddContactModal from "@/components/modals/AddContactModal";
+import ContactModal from "@/components/modals/ContactModal";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import apiClient from "@/api/apiClient";
 import LoadingScreen from "../common/LoadingScreen";
 import Pagination from "@/components/pagination/Pagination";
 import EmptyResultsScreen from "../common/EmptyResults";
+import { EditContactModel } from "./models/contact.model";
 
 function Contacts() {
   const [isOpen, setIsOpen] = useState(false);
@@ -69,7 +69,7 @@ function Contacts() {
               </div>
             </Button>
           </DialogTrigger>
-          <AddContactModal onClose={handleDialogClose} />
+          <ContactModal onClose={handleDialogClose} inEditMode={false} />
         </Dialog>
       </div>
       {/* Contact Cards Section */}
@@ -81,10 +81,11 @@ function Contacts() {
           />
         ) : (
           data &&
-          data.map((contact: ContactModel, index: number) => {
+          data.map((contact: EditContactModel, index: number) => {
             return (
               <ContactCard
                 key={String(index)}
+                _id={contact._id}
                 firstName={contact.firstName}
                 lastName={contact.lastName}
                 companyName={contact.companyName}

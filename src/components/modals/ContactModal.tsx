@@ -17,10 +17,13 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import ContactModel from "@/pages/contacts/models/contact.model";
 import apiClient from "@/api/apiClient";
 import { toast } from "@/hooks/use-toast";
+import { useEffect, useState } from "react";
+import LoadingScreen from "@/pages/common/LoadingScreen";
+import ErrorScreen from "@/pages/common/ErrorScreen";
 
 //* Form Schema
 const FormSchema = z.object({
@@ -52,9 +55,15 @@ const FormSchema = z.object({
 
 interface AddContactModalProps {
   onClose: () => void; // Explicit type for the onClose prop
+  inEditMode?: boolean;
+  contactId?: string;
 }
 
-const AddContactModal: React.FC<AddContactModalProps> = ({ onClose }) => {
+const ContactModal: React.FC<AddContactModalProps> = ({
+  onClose,
+  inEditMode,
+  contactId,
+}) => {
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
@@ -68,11 +77,53 @@ const AddContactModal: React.FC<AddContactModalProps> = ({ onClose }) => {
     },
   });
 
+  const { reset, watch } = form;
+
   //* React Query Client
   const queryClient = useQueryClient();
 
+  //* When in edit mode this will get triggered
+  const getContactById = async (contactId: string | undefined) => {
+    if (contactId === undefined) return { message: "No Contact Found" };
+    const response = await apiClient.get(`/contacts/${contactId}`);
+    return response.data.data;
+  };
+
+  const {
+    data: contactDetails,
+    error,
+    isLoading,
+  } = useQuery({
+    queryKey: ["getContactById", contactId],
+    queryFn: () => getContactById(contactId),
+    enabled: !!contactId,
+  });
+
+  //* Set the default values in the form
+  useEffect(() => {
+    if (contactDetails && Object.keys(contactDetails).length > 0) {
+      reset({
+        email: contactDetails.email || "",
+        firstName: contactDetails.firstName || "",
+        lastName: contactDetails.lastName || "",
+        phoneNumber: contactDetails.phoneNumber || "",
+        companyName: contactDetails.companyName || "",
+        role: contactDetails.role || "",
+        linkedInProfile: contactDetails.linkedInProfile || "",
+      });
+    }
+  }, [contactId, contactDetails, reset]);
+
   const addNewContact = async (newContact: ContactModel) => {
     const response = await apiClient.post("/contacts", newContact);
+    return response.data.data;
+  };
+
+  const editContactById = async (newContact: ContactModel) => {
+    const response = await apiClient.patch(
+      `/contacts/${contactId}`,
+      newContact
+    );
     return response.data.data;
   };
 
@@ -94,6 +145,43 @@ const AddContactModal: React.FC<AddContactModalProps> = ({ onClose }) => {
     },
   });
 
+  const editContactMutation = useMutation({
+    mutationFn: editContactById,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["getAllContacts"] });
+      toast({
+        title: "Contact has been updated successfully !!",
+      });
+      onClose();
+    },
+    onError(error, variables, context) {
+      toast({
+        title: "Error occurred while updating contact !!",
+        description: error.toString(),
+      });
+      onClose();
+    },
+  });
+
+  //* Check if form state has changed
+  const [valuesChanged, setValuesChanged] = useState<boolean>(false);
+  const checkForChange = () => {
+    if (contactDetails) {
+      const hasChanged = Object.entries(form.getValues()).some(
+        ([key, value]) => {
+          return (
+            contactDetails[key] &&
+            value.toString() !== contactDetails[key].toString()
+          );
+        }
+      );
+      setValuesChanged(hasChanged);
+    }
+  };
+  useEffect(() => {
+    checkForChange();
+  }, [watch()]);
+
   function onSubmit(values: z.infer<typeof FormSchema>) {
     const newContact = {
       firstName: values.firstName,
@@ -104,7 +192,21 @@ const AddContactModal: React.FC<AddContactModalProps> = ({ onClose }) => {
       phoneNumber: values.phoneNumber,
       linkedInProfile: values.linkedInProfile,
     };
-    mutation.mutate(newContact);
+    if (inEditMode) {
+      editContactMutation.mutate(newContact);
+    } else {
+      mutation.mutate(newContact);
+    }
+  }
+
+  if (isLoading) return <LoadingScreen />;
+  if (error) {
+    return (
+      <ErrorScreen
+        title="Error while fetching contact details"
+        description="Could not find the contact"
+      />
+    );
   }
 
   return (
@@ -226,8 +328,14 @@ const AddContactModal: React.FC<AddContactModalProps> = ({ onClose }) => {
               )}
             />
             <div className="flex justify-center">
-              <Button type="submit" className="w-full font-semibold">
-                Save the Contact
+              <Button
+                type="submit"
+                className={`w-full font-semibold ${
+                  !valuesChanged ? "cursor-not-allowed" : "cursor-pointer"
+                }`}
+                disabled={!valuesChanged}
+              >
+                {inEditMode ? "Update Contact" : "Save the Contact"}
               </Button>
             </div>
           </form>
@@ -237,4 +345,4 @@ const AddContactModal: React.FC<AddContactModalProps> = ({ onClose }) => {
   );
 };
 
-export default AddContactModal;
+export default ContactModal;

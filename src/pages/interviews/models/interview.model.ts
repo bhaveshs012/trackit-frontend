@@ -17,4 +17,16 @@ interface ScheduledInterviewModel {
   scheduledOn: Date;
 }
 
-export type { ScheduledInterviewModel, InterviewRound };
+interface EditScheduledInterviewModel {
+  _id: string;
+  position: string;
+  companyName: string;
+  interviewRound: String;
+  scheduledOn: Date;
+}
+
+export type {
+  ScheduledInterviewModel,
+  InterviewRound,
+  EditScheduledInterviewModel,
+};

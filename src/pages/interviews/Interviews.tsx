@@ -6,12 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import ScheduledInterviewCard from "./components/ScheduledInterviewCard";
-import AddInterviewScheduleModal from "@/components/modals/AddInterviewSchedule";
+import InterviewScheduleModal from "@/components/modals/InterviewScheduleModal";
 import LoadingScreen from "../common/LoadingScreen";
 import EmptyResultsScreen from "../common/EmptyResults";
 import Pagination from "@/components/pagination/Pagination";
 import apiClient from "@/api/apiClient";
-import { ScheduledInterviewModel } from "./models/interview.model";
+import { EditScheduledInterviewModel } from "./models/interview.model";
 import { useNavigate } from "react-router-dom";
 
 interface InterviewsPageProps {
@@ -46,7 +46,6 @@ const Interviews: React.FC<InterviewsPageProps> = ({ displayArchived }) => {
         limit: itemsPerPage,
       },
     });
-
     setTotalItems(response.data.data.pagination.totalDocs);
     return response.data.data.interviewRounds;
   }
@@ -124,7 +123,10 @@ const Interviews: React.FC<InterviewsPageProps> = ({ displayArchived }) => {
                   </div>
                 </Button>
               </DialogTrigger>
-              <AddInterviewScheduleModal onClose={handleDialogClose} />
+              <InterviewScheduleModal
+                onClose={handleDialogClose}
+                inEditMode={false}
+              />
             </Dialog>
           </div>
         </div>
@@ -139,9 +141,10 @@ const Interviews: React.FC<InterviewsPageProps> = ({ displayArchived }) => {
           />
         ) : (
           data &&
-          data.map((interview: ScheduledInterviewModel, index: number) => (
+          data.map((interview: EditScheduledInterviewModel, index: number) => (
             <ScheduledInterviewCard
               key={String(index)}
+              _id={interview._id}
               companyName={interview.companyName}
               scheduledOn={interview.scheduledOn}
               position={interview.position}

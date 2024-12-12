@@ -1,7 +1,11 @@
-import { Mail, Briefcase, Phone, Linkedin } from "lucide-react";
+import { Mail, Briefcase, Phone, Linkedin, Edit } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import ContactModel from "../models/contact.model";
+import { EditContactModel } from "../models/contact.model";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogTrigger } from "@/components/ui/dialog";
+import ContactModal from "@/components/modals/ContactModal";
+import { useState } from "react";
 
 export default function ContactCard({
   firstName,
@@ -11,18 +15,36 @@ export default function ContactCard({
   role,
   phoneNumber,
   linkedInProfile,
-}: ContactModel) {
+  _id,
+}: EditContactModel) {
+  const [isOpen, setIsOpen] = useState(false);
+  const handleDialogClose = () => setIsOpen(false);
+
   return (
     <Card className="w-full max-w-md m-4 mb-6">
-      <CardHeader className="flex flex-row items-center gap-4">
-        <Avatar className="w-16 h-16">
-          <AvatarImage alt={firstName} />
-          <AvatarFallback>{firstName[0] + lastName[0]}</AvatarFallback>
-        </Avatar>
-        <div>
-          <CardTitle>{firstName + " " + lastName}</CardTitle>
-          <p className="text-sm text-muted-foreground">{role}</p>
+      <CardHeader className="flex flex-row items-center gap-4 justify-between">
+        <div className="flex flex-row items-center gap-4">
+          <Avatar className="w-16 h-16">
+            <AvatarImage alt={firstName} />
+            <AvatarFallback>{firstName[0] + lastName[0]}</AvatarFallback>
+          </Avatar>
+          <div>
+            <CardTitle>{firstName + " " + lastName}</CardTitle>
+            <p className="text-sm text-muted-foreground">{role}</p>
+          </div>
         </div>
+        <Dialog open={isOpen} onOpenChange={setIsOpen}>
+          <DialogTrigger asChild>
+            <Button className="z-10" variant={"outline"}>
+              <Edit />
+            </Button>
+          </DialogTrigger>
+          <ContactModal
+            onClose={handleDialogClose}
+            inEditMode={true}
+            contactId={_id}
+          />
+        </Dialog>
       </CardHeader>
       <CardContent className="grid gap-4">
         <div className="flex items-center gap-2">

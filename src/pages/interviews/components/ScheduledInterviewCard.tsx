@@ -2,14 +2,18 @@ import { CalendarDays, Building, ChevronRight } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ScheduledInterviewModel } from "../models/interview.model";
+import { EditScheduledInterviewModel } from "../models/interview.model";
 import { convertISODateToString } from "@/utils/input_date_formatter";
+import { useState } from "react";
+import { Dialog, DialogTrigger } from "@/components/ui/dialog";
+import InterviewScheduleModal from "@/components/modals/InterviewScheduleModal";
 export default function ScheduledInterviewCard({
+  _id,
   position,
   companyName,
   interviewRound,
   scheduledOn,
-}: ScheduledInterviewModel) {
+}: EditScheduledInterviewModel) {
   //* Helper Functions
 
   const getRoundIcon = (round: String) => {
@@ -30,6 +34,9 @@ export default function ScheduledInterviewCard({
         return "❓";
     }
   };
+
+  const [isOpen, setIsOpen] = useState(false);
+  const handleDialogClose = () => setIsOpen(false);
 
   return (
     <Card className="w-full max-w-md mb-6">
@@ -52,10 +59,19 @@ export default function ScheduledInterviewCard({
             <CalendarDays className="h-4 w-4 opacity-70" />
             <span>{convertISODateToString(scheduledOn.toString())}</span>
           </div>
-          <Button variant="outline" className="mt-4 w-full">
-            View Details
-            <ChevronRight className="h-4 w-4 ml-2" />
-          </Button>
+          <Dialog open={isOpen} onOpenChange={setIsOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline" className="mt-4 w-full">
+                View Details
+                <ChevronRight className="h-4 w-4 ml-2" />
+              </Button>
+            </DialogTrigger>
+            <InterviewScheduleModal
+              onClose={handleDialogClose}
+              inEditMode={true}
+              interviewId={_id}
+            />
+          </Dialog>
         </div>
       </CardContent>
     </Card>

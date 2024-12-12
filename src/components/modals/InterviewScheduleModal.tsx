@@ -27,14 +27,18 @@ import {
 import {
   convertDateToInputString,
   convertInputStringToDate,
+  convertISODateToString,
 } from "@/utils/input_date_formatter";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   InterviewRound,
   ScheduledInterviewModel,
 } from "@/pages/interviews/models/interview.model";
 import apiClient from "@/api/apiClient";
 import { toast } from "@/hooks/use-toast";
+import { useEffect, useState } from "react";
+import LoadingScreen from "@/pages/common/LoadingScreen";
+import ErrorScreen from "@/pages/common/ErrorScreen";
 
 //* Form Schema
 const FormSchema = z
@@ -86,10 +90,14 @@ const interviewRoundEnum = {
 
 interface AddInterviewScheduleModalProps {
   onClose: () => void; // Explicit type for the onClose prop
+  inEditMode?: boolean;
+  interviewId?: string;
 }
 
-const AddInterviewScheduleModal: React.FC<AddInterviewScheduleModalProps> = ({
+const InterviewScheduleModal: React.FC<AddInterviewScheduleModalProps> = ({
   onClose,
+  inEditMode = false,
+  interviewId,
 }) => {
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
@@ -102,13 +110,55 @@ const AddInterviewScheduleModal: React.FC<AddInterviewScheduleModalProps> = ({
     },
   });
 
+  const { reset, watch } = form;
+
   //* React Query Client
   const queryClient = useQueryClient();
+
+  //* When in edit mode :: we fetch the interview details
+  const getInterviewDetailsById = async (interviewId: string | undefined) => {
+    if (interviewId === undefined)
+      return { message: "No interview details found" };
+    const response = await apiClient.get(`/interviews/${interviewId}`);
+    return response.data.data;
+  };
+
+  const {
+    data: interviewDetails,
+    error,
+    isLoading,
+  } = useQuery({
+    queryKey: ["getInterviewDetailsById", interviewId],
+    queryFn: () => getInterviewDetailsById(interviewId),
+    enabled: !!interviewId,
+  });
+
+  useEffect(() => {
+    if (interviewDetails && Object.keys(interviewDetails).length > 0) {
+      reset({
+        companyName: interviewDetails.companyName || "",
+        position: interviewDetails.position || "",
+        scheduledOn: interviewDetails.scheduledOn.split("T")[0],
+        roundDetails: interviewDetails.roundDetails || "",
+        interviewRound: interviewDetails.interviewRound,
+      });
+    }
+  }, [interviewId, interviewDetails, reset]);
 
   const addNewInterviewSchedule = async (
     newInterviewSchedule: ScheduledInterviewModel
   ) => {
     const response = await apiClient.post("/interviews", newInterviewSchedule);
+    return response.data.data;
+  };
+
+  const editInterviewById = async (
+    newInterviewSchedule: ScheduledInterviewModel
+  ) => {
+    const response = await apiClient.patch(
+      `/interviews/${interviewId}`,
+      newInterviewSchedule
+    );
     return response.data.data;
   };
 
@@ -130,6 +180,49 @@ const AddInterviewScheduleModal: React.FC<AddInterviewScheduleModalProps> = ({
     },
   });
 
+  const editInterviewMutation = useMutation({
+    mutationFn: editInterviewById,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["getAllInterviews"] });
+      toast({
+        title: "Interview Schedule has been updated successfully !!",
+      });
+      onClose();
+    },
+    onError(error, variables, context) {
+      toast({
+        title: "Error occurred while updating interview schedule !!",
+        description: error.toString(),
+      });
+      onClose();
+    },
+  });
+
+  //* Check if form state has changed
+  const [valuesChanged, setValuesChanged] = useState<boolean>(false);
+  const checkForChange = () => {
+    if (interviewDetails) {
+      const formValues = form.getValues();
+      const hasChanged = Object.entries(formValues).some(([key, value]) => {
+        const detailValue = interviewDetails[key];
+        // Special handling for "scheduledOn" to compare only the date part
+        if (key === "scheduledOn") {
+          return (
+            detailValue &&
+            value !== new Date(detailValue).toISOString().split("T")[0]
+          );
+        }
+        return detailValue && value.toString() !== detailValue.toString();
+      });
+
+      setValuesChanged(hasChanged);
+    }
+  };
+
+  useEffect(() => {
+    checkForChange();
+  }, [watch()]);
+
   function onSubmit(values: z.infer<typeof FormSchema>) {
     const newInterviewSchedule: ScheduledInterviewModel = {
       position: values.position,
@@ -137,7 +230,21 @@ const AddInterviewScheduleModal: React.FC<AddInterviewScheduleModalProps> = ({
       interviewRound: values.interviewRound,
       scheduledOn: convertInputStringToDate(values.scheduledOn),
     };
-    mutation.mutate(newInterviewSchedule);
+    if (inEditMode) {
+      editInterviewMutation.mutate(newInterviewSchedule);
+    } else {
+      mutation.mutate(newInterviewSchedule);
+    }
+  }
+
+  if (isLoading) return <LoadingScreen />;
+  if (error) {
+    return (
+      <ErrorScreen
+        title="Error while fetching interview details"
+        description="Could not find the interview schedule you're looking for"
+      />
+    );
   }
 
   return (
@@ -234,8 +341,16 @@ const AddInterviewScheduleModal: React.FC<AddInterviewScheduleModalProps> = ({
               )}
             />
             <div className="flex justify-center">
-              <Button type="submit" className="w-full font-semibold">
-                Save the Interview Schedule
+              <Button
+                type="submit"
+                className={`w-full font-semibold ${
+                  !valuesChanged ? "cursor-not-allowed" : "cursor-pointer"
+                }`}
+                disabled={!valuesChanged}
+              >
+                {inEditMode
+                  ? "Update Interview Schedule"
+                  : "Save the Interview Schedule"}
               </Button>
             </div>
           </form>
@@ -245,4 +360,4 @@ const AddInterviewScheduleModal: React.FC<AddInterviewScheduleModalProps> = ({
   );
 };
 
-export default AddInterviewScheduleModal;
+export default InterviewScheduleModal;
