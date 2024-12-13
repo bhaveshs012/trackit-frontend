@@ -13,6 +13,7 @@ import Pagination from "@/components/pagination/Pagination";
 import apiClient from "@/api/apiClient";
 import { EditScheduledInterviewModel } from "./models/interview.model";
 import { useNavigate } from "react-router-dom";
+import ErrorScreen from "../common/ErrorScreen";
 
 interface InterviewsPageProps {
   displayArchived: boolean;
@@ -59,12 +60,14 @@ const Interviews: React.FC<InterviewsPageProps> = ({ displayArchived }) => {
 
   if (isLoading) return <LoadingScreen />;
 
-  if (error)
+  if (error) {
     return (
-      <div className="text-center text-red-600">
-        <p>Failed to fetch interviews. Please try again later.</p>
-      </div>
+      <ErrorScreen
+        title="Error while fetching interview schedules"
+        description="Could not fetch the interview schedules due to some internal server error"
+      />
     );
+  }
 
   return (
     <div className="flex flex-col min-h-screen p-6 gap-y-6">
@@ -148,6 +151,7 @@ const Interviews: React.FC<InterviewsPageProps> = ({ displayArchived }) => {
               companyName={interview.companyName}
               scheduledOn={interview.scheduledOn}
               position={interview.position}
+              roundDetails={interview.roundDetails}
               interviewRound={interview.interviewRound}
             />
           ))

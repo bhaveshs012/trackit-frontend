@@ -12,6 +12,7 @@ import LoadingScreen from "../common/LoadingScreen";
 import Pagination from "@/components/pagination/Pagination";
 import EmptyResultsScreen from "../common/EmptyResults";
 import { EditContactModel } from "./models/contact.model";
+import ErrorScreen from "../common/ErrorScreen";
 
 function Contacts() {
   const [isOpen, setIsOpen] = useState(false);
@@ -51,6 +52,14 @@ function Contacts() {
   });
 
   if (isLoading) return <LoadingScreen />;
+  if (error) {
+    return (
+      <ErrorScreen
+        title="Error while fetching contacts"
+        description="Could not fetch the contacts due to some internal server error"
+      />
+    );
+  }
 
   return (
     <div className="flex flex-col min-h-screen p-6 gap-y-6">

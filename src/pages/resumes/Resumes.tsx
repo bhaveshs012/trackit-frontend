@@ -27,7 +27,7 @@ function Resumes() {
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
     queryClient.invalidateQueries({
-      queryKey: ["getAllContacts", currentPage],
+      queryKey: ["getAllResumes", currentPage],
     });
   };
 

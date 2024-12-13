@@ -1,6 +1,13 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   DialogContent,
   DialogDescription,
   DialogHeader,
@@ -19,6 +26,8 @@ import {
 } from "@/components/ui/form";
 import { convertInputStringToDate } from "@/utils/input_date_formatter";
 import { Textarea } from "@/components/ui/textarea";
+import apiClient from "@/api/apiClient";
+import { useQuery } from "@tanstack/react-query";
 
 //* Form Schema
 const formSchema = z
@@ -32,6 +41,9 @@ const formSchema = z
     jobLink: z
       .string({ required_error: "Job Link is required" })
       .min(1, "Job Link cannot be empty"),
+    resumeUploaded: z
+      .string({ required_error: "Uploaded Resume is required" })
+      .min(1, "Uploaded Resume link cannot be empty"),
     applicationStatus: z.enum(
       [
         "Applied",
@@ -90,8 +102,33 @@ const AddApplicationModal: React.FC<AddApplicationModalProps> = ({
     },
   });
 
+  //* Get all resumes
+  const getAllResumes = async () => {
+    const response = await apiClient.get("users/resume", {
+      params: {
+        page: 1,
+        limit: 5,
+      },
+    });
+    //* Return the resumes list
+    return response.data.data.resumes;
+  };
+
+  const {
+    data: resumes,
+    error,
+    isLoading,
+  } = useQuery({
+    queryKey: ["getAllResumes"],
+    queryFn: getAllResumes,
+  });
+
   function onSubmit(values: z.infer<typeof formSchema>) {
     console.log("Form Values :: ", values);
+  }
+
+  if (isLoading) {
+    return <p>Loading...</p>;
   }
 
   return (
@@ -168,6 +205,42 @@ const AddApplicationModal: React.FC<AddApplicationModalProps> = ({
                       {...field}
                     />
                   </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="resumeUploaded"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Resume Uploaded</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select the uploaded resume" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {resumes.map(
+                        (
+                          resume: {
+                            resumeLink: string;
+                            fileName: string;
+                            skills: string[];
+                          },
+                          index: number
+                        ) => (
+                          <SelectItem key={index} value={resume.resumeLink}>
+                            {resume.fileName} - {resume.skills.join(", ")}
+                          </SelectItem>
+                        )
+                      )}
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}
