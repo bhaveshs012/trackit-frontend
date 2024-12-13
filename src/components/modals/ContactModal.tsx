@@ -24,6 +24,7 @@ import { toast } from "@/hooks/use-toast";
 import { useEffect, useState } from "react";
 import LoadingScreen from "@/pages/common/LoadingScreen";
 import ErrorScreen from "@/pages/common/ErrorScreen";
+import ConfirmDeleteDialog from "../alert-dialogs/ConfirmDelete";
 
 //* Form Schema
 const FormSchema = z.object({
@@ -127,6 +128,11 @@ const ContactModal: React.FC<AddContactModalProps> = ({
     return response.data.data;
   };
 
+  const deleteContactById = async () => {
+    const response = await apiClient.delete(`/contacts/${contactId}`);
+    return response.data.data;
+  };
+
   const mutation = useMutation({
     mutationFn: addNewContact,
     onSuccess: () => {
@@ -162,6 +168,28 @@ const ContactModal: React.FC<AddContactModalProps> = ({
       onClose();
     },
   });
+
+  const deleteContactMutation = useMutation({
+    mutationFn: deleteContactById,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["getAllContacts"] });
+      toast({
+        title: "Contact has been deleted successfully !!",
+      });
+      onClose();
+    },
+    onError(error, variables, context) {
+      toast({
+        title: "Error occurred while deleting contact !!",
+        description: error.toString(),
+      });
+      onClose();
+    },
+  });
+
+  const handleDeleteContact = () => {
+    deleteContactMutation.mutate();
+  };
 
   //* Check if form state has changed
   const [valuesChanged, setValuesChanged] = useState<boolean>(false);
@@ -338,6 +366,13 @@ const ContactModal: React.FC<AddContactModalProps> = ({
                 {inEditMode ? "Update Contact" : "Save the Contact"}
               </Button>
             </div>
+            {inEditMode && (
+              <ConfirmDeleteDialog
+                onConfirm={handleDeleteContact}
+                description="This action cannot be undone. This will permanently delete the
+            contact and remove your data from our servers."
+              />
+            )}
           </form>
         </Form>
       </div>

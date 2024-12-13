@@ -39,6 +39,7 @@ import { toast } from "@/hooks/use-toast";
 import { useEffect, useState } from "react";
 import LoadingScreen from "@/pages/common/LoadingScreen";
 import ErrorScreen from "@/pages/common/ErrorScreen";
+import ConfirmDeleteDialog from "../alert-dialogs/ConfirmDelete";
 
 //* Form Schema
 const FormSchema = z
@@ -162,6 +163,11 @@ const InterviewScheduleModal: React.FC<AddInterviewScheduleModalProps> = ({
     return response.data.data;
   };
 
+  const deleteInterviewById = async () => {
+    const response = await apiClient.delete(`/interviews/${interviewId}`);
+    return response.data.data;
+  };
+
   const mutation = useMutation({
     mutationFn: addNewInterviewSchedule,
     onSuccess: () => {
@@ -197,6 +203,28 @@ const InterviewScheduleModal: React.FC<AddInterviewScheduleModalProps> = ({
       onClose();
     },
   });
+
+  const deleteInterviewMutation = useMutation({
+    mutationFn: deleteInterviewById,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["getAllInterviews"] });
+      toast({
+        title: "Interview Schedule has been deleted successfully !!",
+      });
+      onClose();
+    },
+    onError(error, variables, context) {
+      toast({
+        title: "Error occurred while deleting the interview schedule !!",
+        description: error.toString(),
+      });
+      onClose();
+    },
+  });
+
+  const handleDeleteInterview = () => {
+    deleteInterviewMutation.mutate();
+  };
 
   //* Check if form state has changed
   const [valuesChanged, setValuesChanged] = useState<boolean>(false);
@@ -353,6 +381,13 @@ const InterviewScheduleModal: React.FC<AddInterviewScheduleModalProps> = ({
                   : "Save the Interview Schedule"}
               </Button>
             </div>
+            {inEditMode && (
+              <ConfirmDeleteDialog
+                onConfirm={handleDeleteInterview}
+                description="This action cannot be undone. This will permanently delete the
+            interview schedule and remove your data from our servers."
+              />
+            )}
           </form>
         </Form>
       </div>

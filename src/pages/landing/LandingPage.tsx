@@ -9,6 +9,7 @@ import InterviewImage from "/images/landingPage/interview.png";
 import TrackerImage from "/images/landingPage/tracker.png";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
+import AboutAndServices from "./components/AboutAndServices";
 
 function LandingPage() {
   const navigate = useNavigate();
@@ -74,10 +75,7 @@ function LandingPage() {
 
         {/* Scrollable Content */}
         <div className="relative py-10">
-          <p className="container mx-auto px-4 text-center">
-            Lorem ipsum dolor sit amet consectetur adipisicing elit.
-            Voluptate...
-          </p>
+          <AboutAndServices />
         </div>
 
         <Footer />
