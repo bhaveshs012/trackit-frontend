@@ -27,19 +27,16 @@ import {
 import {
   convertDateToInputString,
   convertInputStringToDate,
-  convertISODateToString,
 } from "@/utils/input_date_formatter";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import {
-  InterviewRound,
-  ScheduledInterviewModel,
-} from "@/pages/interviews/models/interview.model";
+import { ScheduledInterviewModel } from "@/pages/interviews/models/interview.model";
 import apiClient from "@/api/apiClient";
 import { toast } from "@/hooks/use-toast";
 import { useEffect, useState } from "react";
 import LoadingScreen from "@/pages/common/LoadingScreen";
 import ErrorScreen from "@/pages/common/ErrorScreen";
 import ConfirmDeleteDialog from "../alert-dialogs/ConfirmDelete";
+import { Textarea } from "@/components/ui/textarea";
 
 //* Form Schema
 const FormSchema = z
@@ -256,6 +253,7 @@ const InterviewScheduleModal: React.FC<AddInterviewScheduleModalProps> = ({
       position: values.position,
       companyName: values.companyName,
       interviewRound: values.interviewRound,
+      roundDetails: values.roundDetails,
       scheduledOn: convertInputStringToDate(values.scheduledOn),
     };
     if (inEditMode) {
@@ -347,6 +345,22 @@ const InterviewScheduleModal: React.FC<AddInterviewScheduleModalProps> = ({
                       ))}
                     </SelectContent>
                   </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="roundDetails"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Round Details</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      placeholder="Enter the round details"
+                      {...field}
+                    />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}

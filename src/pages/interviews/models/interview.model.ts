@@ -13,7 +13,8 @@ type InterviewRound = keyof typeof interviewRoundEnum;
 interface ScheduledInterviewModel {
   position: string;
   companyName: string;
-  interviewRound: String;
+  interviewRound: string;
+  roundDetails: string;
   scheduledOn: Date;
 }
 
@@ -22,6 +23,7 @@ interface EditScheduledInterviewModel {
   position: string;
   companyName: string;
   interviewRound: String;
+  roundDetails: string;
   scheduledOn: Date;
 }
 

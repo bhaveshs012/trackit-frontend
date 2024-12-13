@@ -5,7 +5,13 @@ import { UniqueIdentifier } from "@dnd-kit/core";
 
 type DNDType = {
   id: UniqueIdentifier; // The outer container with the application status
-  title: string;
+  title:
+    | "Applied"
+    | "Interviewing"
+    | "Offer Received"
+    | "Accepted"
+    | "Rejected"
+    | "Withdrawn";
   items: {
     id: UniqueIdentifier;
     jobApplication: ApplicationModel;
