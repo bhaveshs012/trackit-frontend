@@ -123,6 +123,7 @@ const AddResumeModal: React.FC<AddResumeModalProps> = ({ onClose }) => {
       targetPosition: values.targetPosition,
       resume: values.resume,
     };
+
     mutation.mutate(newResume);
   }
 

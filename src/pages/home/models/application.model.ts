@@ -10,12 +10,19 @@ const applicationStatusEnum = {
 type ApplicationStatus = keyof typeof applicationStatusEnum;
 
 interface ApplicationModel {
+  _id?: string;
   companyName: string;
   position: string;
   jobLink: string;
-  applicationStatus: ApplicationStatus;
+  applicationStatus:
+    | "Applied"
+    | "Interviewing"
+    | "Offer Received"
+    | "Accepted"
+    | "Rejected"
+    | "Withdrawn";
   resumeUploaded: string;
-  coverLetterUploaded: string;
+  coverLetterUploaded?: string;
   notes: string;
   appliedOn: Date;
 }

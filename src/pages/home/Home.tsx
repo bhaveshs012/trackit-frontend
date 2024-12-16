@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Heading from "@/components/typography/Heading";
 import { Button } from "@/components/ui/button";
 import { ArchiveIcon } from "lucide-react";
@@ -20,21 +20,65 @@ import {
   sortableKeyboardCoordinates,
 } from "@dnd-kit/sortable";
 import Container from "./components/Container";
-import JobApplicationCard from "./components/ApplicationCard";
-import dummyContainers, { DNDType } from "./data/dummy_data";
 import SubHeading from "@/components/typography/SubHeading";
+import ContainerType from "./components/Container/container.type";
+import apiClient from "@/api/apiClient";
+import { v4 as uuidv4 } from "uuid";
+import { ApplicationModel } from "./models/application.model";
 
 function Home() {
-  const [containers, setContainers] = useState<DNDType[]>(dummyContainers);
+  const [containers, setContainers] = useState<ContainerType[]>([
+    { id: uuidv4(), title: "Applied", applications: [] },
+    { id: uuidv4(), title: "Interviewing", applications: [] },
+    { id: uuidv4(), title: "Offer Received", applications: [] },
+  ]);
   const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
+  useEffect(() => {
+    const getApplicationsByStatus = async () => {
+      try {
+        // Fetch applications for all containers
+        const responses = await Promise.all(
+          containers.map(async (container) => {
+            const url = `/applications?status=${container.title}`;
+            return apiClient.get(url).then((res) => res.data.data.applications);
+          })
+        );
+
+        console.log("Applications :: ", responses);
+
+        // Avoid redundant state updates
+        setContainers((prev) => {
+          const updatedContainers = prev.map((container, index) => ({
+            ...container,
+            applications: responses[index].map(
+              (application: ApplicationModel) => ({
+                ...application,
+                appliedOn: new Date(application.appliedOn),
+              })
+            ),
+          }));
+
+          // Only update state if there's a change
+          if (JSON.stringify(updatedContainers) !== JSON.stringify(prev)) {
+            return updatedContainers;
+          }
+          return prev;
+        });
+      } catch (error) {
+        console.error("Error fetching applications: ", error);
+      }
+    };
+
+    getApplicationsByStatus();
+  }, []); // No dependencies to avoid unnecessary triggers
 
   function findContainerById(id: UniqueIdentifier) {
     return containers.find((container) =>
-      container.items.some((item) => item.id === id)
+      container.applications.some((item) => item._id === id)
     );
   }
 
@@ -63,16 +107,18 @@ function Home() {
       );
 
       //* Getting the old index of the item in the container
-      const oldIndex = activeContainer.items.findIndex(
-        (i) => i.id === active.id
+      const oldIndex = activeContainer.applications.findIndex(
+        (i) => i._id === active.id
       );
       //* The new moved index
-      const newIndex = overContainer.items.findIndex((i) => i.id === over.id);
+      const newIndex = overContainer.applications.findIndex(
+        (i) => i._id === over.id
+      );
 
       setContainers((prev) => {
         const newContainers = [...prev];
-        newContainers[containerIndex].items = arrayMove(
-          newContainers[containerIndex].items,
+        newContainers[containerIndex].applications = arrayMove(
+          newContainers[containerIndex].applications,
           oldIndex,
           newIndex
         );
@@ -87,18 +133,20 @@ function Home() {
       );
 
       // The item index to be moved
-      const itemIndex = activeContainer.items.findIndex(
-        (i) => i.id === active.id
+      const itemIndex = activeContainer.applications.findIndex(
+        (i) => i._id === active.id
       );
 
       //* Removing the element from the old container
-      const [movedItem] = activeContainer.items.splice(itemIndex, 1);
+      const [movedItem] = activeContainer.applications.splice(itemIndex, 1);
 
       setContainers((prev) => {
         const newContainers = [...prev]; // creating a copy
-        newContainers[activeContainerIndex].items = [...activeContainer.items]; // active container will be the same : item already removed
-        newContainers[overContainerIndex].items = [
-          ...overContainer.items,
+        newContainers[activeContainerIndex].applications = [
+          ...activeContainer.applications,
+        ]; // active container will be the same : item already removed
+        newContainers[overContainerIndex].applications = [
+          ...overContainer.applications,
           movedItem,
         ]; // over container will have the new item added to the end
         return newContainers;
@@ -136,35 +184,24 @@ function Home() {
                   id={container.id}
                   title={container.title}
                   key={container.id}
-                >
-                  <SortableContext items={container.items.map((i) => i.id)}>
-                    <div className="flex items-start flex-col gap-y-4">
-                      {container.items.map((item) => (
-                        <JobApplicationCard
-                          key={item.id}
-                          id={item.id}
-                          jobApplication={item.jobApplication}
-                        />
-                      ))}
-                    </div>
-                  </SortableContext>
-                </Container>
+                  applications={container.applications}
+                ></Container>
               ))}
             </SortableContext>
 
             {/* DragOverlay keeps the dragged item visible */}
-            <DragOverlay>
+            {/* <DragOverlay>
               {activeId ? (
                 <JobApplicationCard
                   id={activeId}
                   jobApplication={
-                    findContainerById(activeId)?.items.find(
-                      (item) => item.id === activeId
-                    )?.jobApplication || null
+                    findContainerById(activeId)?.applications.find(
+                      (item) => item._id === activeId
+                    ) || null
                   }
                 />
               ) : null}
-            </DragOverlay>
+            </DragOverlay> */}
           </DndContext>
         </div>
       </div>

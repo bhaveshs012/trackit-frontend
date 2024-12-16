@@ -1,15 +1,8 @@
 import { UniqueIdentifier } from "@dnd-kit/core";
+import { ApplicationModel } from "../../models/application.model";
 
-export default interface ContainerProps {
+export default interface ContainerType {
   id: UniqueIdentifier;
-  children: React.ReactNode;
-  title:
-    | "Applied"
-    | "Interviewing"
-    | "Offer Received"
-    | "Accepted"
-    | "Rejected"
-    | "Withdrawn";
-  description?: string;
-  onAddItem?: () => void;
+  title: "Applied" | "Interviewing" | "Offer Received";
+  applications: ApplicationModel[];
 }

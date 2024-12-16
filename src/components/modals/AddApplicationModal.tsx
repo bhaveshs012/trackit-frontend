@@ -27,7 +27,9 @@ import {
 import { convertInputStringToDate } from "@/utils/input_date_formatter";
 import { Textarea } from "@/components/ui/textarea";
 import apiClient from "@/api/apiClient";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { ApplicationModel } from "@/pages/home/models/application.model";
+import { toast } from "@/hooks/use-toast";
 
 //* Form Schema
 const formSchema = z
@@ -123,8 +125,40 @@ const AddApplicationModal: React.FC<AddApplicationModalProps> = ({
     queryFn: getAllResumes,
   });
 
+  const addNewApplication = async (newApplication: ApplicationModel) => {
+    const response = await apiClient.post("applications", newApplication);
+    return response.data.data;
+  };
+
+  const mutation = useMutation({
+    mutationFn: addNewApplication,
+    onSuccess: () => {
+      //queryClient.invalidateQueries({ queryKey: ["getAllResumes"] });
+      toast({
+        title: "Job application has been saved successfully !!",
+      });
+      onClose();
+    },
+    onError(error, variables, context) {
+      toast({
+        title: "Error occurred while saving the job application !!",
+        description: error.toString(),
+      });
+      onClose();
+    },
+  });
+
   function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log("Form Values :: ", values);
+    const newApplication = {
+      companyName: values.companyName,
+      position: values.position,
+      jobLink: values.jobLink,
+      applicationStatus: values.applicationStatus,
+      resumeUploaded: values.resumeUploaded,
+      notes: values.notes,
+      appliedOn: convertInputStringToDate(values.appliedOn),
+    };
+    mutation.mutate(newApplication);
   }
 
   if (isLoading) {
