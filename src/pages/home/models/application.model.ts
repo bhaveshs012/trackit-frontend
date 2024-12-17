@@ -10,7 +10,7 @@ const applicationStatusEnum = {
 type ApplicationStatus = keyof typeof applicationStatusEnum;
 
 interface ApplicationModel {
-  _id?: string;
+  _id: string;
   companyName: string;
   position: string;
   jobLink: string;

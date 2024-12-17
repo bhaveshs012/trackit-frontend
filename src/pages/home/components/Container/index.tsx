@@ -1,4 +1,4 @@
-import ContainerType from "./container.type";
+import ContainerProps from "./container.type";
 import { SortableContext, useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import clsx from "clsx";
@@ -11,7 +11,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import AddApplicationModal from "@/components/modals/AddApplicationModal";
 import JobApplicationCard from "../ApplicationCard";
 
-const Container = ({ id, title, applications }: ContainerType) => {
+const Container = ({ id, title, applications }: ContainerProps) => {
   const { attributes, setNodeRef, transform, transition, isDragging } =
     useSortable({
       id: id,
@@ -58,12 +58,12 @@ const Container = ({ id, title, applications }: ContainerType) => {
           </Dialog>
         </div>
       </div>
-      <SortableContext items={applications.map((i) => uuidv4())}>
+      <SortableContext items={applications.map((a) => a._id)}>
         <div className="flex items-start flex-col gap-y-4">
           {applications.map((application) => (
             <JobApplicationCard
               key={application._id}
-              id={uuidv4()}
+              id={application._id}
               jobApplication={application}
             />
           ))}

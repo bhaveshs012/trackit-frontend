@@ -25,6 +25,7 @@ import ContainerType from "./components/Container/container.type";
 import apiClient from "@/api/apiClient";
 import { v4 as uuidv4 } from "uuid";
 import { ApplicationModel } from "./models/application.model";
+import JobApplicationCard from "./components/ApplicationCard";
 
 function Home() {
   const [containers, setContainers] = useState<ContainerType[]>([
@@ -33,62 +34,53 @@ function Home() {
     { id: uuidv4(), title: "Offer Received", applications: [] },
   ]);
   const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
+
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
+
+  // Fetch job applications by status
   useEffect(() => {
-    const getApplicationsByStatus = async () => {
+    const fetchApplications = async () => {
       try {
-        // Fetch applications for all containers
-        const responses = await Promise.all(
+        const updatedContainers = await Promise.all(
           containers.map(async (container) => {
-            const url = `/applications?status=${container.title}`;
-            return apiClient.get(url).then((res) => res.data.data.applications);
+            const response = await apiClient.get(
+              `/applications?status=${container.title}`
+            );
+            const applications = response.data.data.applications.map(
+              (app: ApplicationModel) => ({
+                ...app,
+                appliedOn: new Date(app.appliedOn),
+              })
+            );
+            return { ...container, applications };
           })
         );
-
-        console.log("Applications :: ", responses);
-
-        // Avoid redundant state updates
-        setContainers((prev) => {
-          const updatedContainers = prev.map((container, index) => ({
-            ...container,
-            applications: responses[index].map(
-              (application: ApplicationModel) => ({
-                ...application,
-                appliedOn: new Date(application.appliedOn),
-              })
-            ),
-          }));
-
-          // Only update state if there's a change
-          if (JSON.stringify(updatedContainers) !== JSON.stringify(prev)) {
-            return updatedContainers;
-          }
-          return prev;
-        });
+        setContainers(updatedContainers);
       } catch (error) {
         console.error("Error fetching applications: ", error);
       }
     };
 
-    getApplicationsByStatus();
-  }, []); // No dependencies to avoid unnecessary triggers
+    fetchApplications();
+  }, []);
 
-  function findContainerById(id: UniqueIdentifier) {
+  const findContainerById = (id: UniqueIdentifier) => {
     return containers.find((container) =>
       container.applications.some((item) => item._id === id)
     );
-  }
+  };
 
-  function handleDragStart(event: DragStartEvent) {
+  const handleDragStart = (event: DragStartEvent) => {
     setActiveId(event.active.id);
-  }
+  };
 
-  function handleDragEnd(event: DragEndEvent) {
-    //* These are the items in the container and not the container itself
+  const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
+
+    // If there's no valid drop target, reset active ID and exit
     if (!over) {
       setActiveId(null);
       return;
@@ -98,33 +90,39 @@ function Home() {
     const overContainer =
       findContainerById(over.id) || containers.find((c) => c.id === over.id);
 
-    if (!activeContainer || !overContainer) return;
+    if (!activeContainer || !overContainer) {
+      setActiveId(null);
+      return;
+    }
 
     if (activeContainer.id === overContainer.id) {
-      //* Getting the container id where we have to drop the item : could be replaced by overContainer.id as well
+      // Reordering within the same container
       const containerIndex = containers.findIndex(
         (c) => c.id === activeContainer.id
       );
-
-      //* Getting the old index of the item in the container
       const oldIndex = activeContainer.applications.findIndex(
         (i) => i._id === active.id
       );
-      //* The new moved index
       const newIndex = overContainer.applications.findIndex(
         (i) => i._id === over.id
       );
 
-      setContainers((prev) => {
-        const newContainers = [...prev];
-        newContainers[containerIndex].applications = arrayMove(
-          newContainers[containerIndex].applications,
-          oldIndex,
-          newIndex
-        );
-        return newContainers;
-      });
+      if (oldIndex !== newIndex) {
+        setContainers((prev) => {
+          const newContainers = [...prev];
+          newContainers[containerIndex] = {
+            ...newContainers[containerIndex],
+            applications: arrayMove(
+              [...newContainers[containerIndex].applications],
+              oldIndex,
+              newIndex
+            ),
+          };
+          return newContainers;
+        });
+      }
     } else {
+      // Moving between different containers
       const activeContainerIndex = containers.findIndex(
         (c) => c.id === activeContainer.id
       );
@@ -132,28 +130,35 @@ function Home() {
         (c) => c.id === overContainer.id
       );
 
-      // The item index to be moved
       const itemIndex = activeContainer.applications.findIndex(
         (i) => i._id === active.id
       );
 
-      //* Removing the element from the old container
-      const [movedItem] = activeContainer.applications.splice(itemIndex, 1);
-
       setContainers((prev) => {
-        const newContainers = [...prev]; // creating a copy
-        newContainers[activeContainerIndex].applications = [
-          ...activeContainer.applications,
-        ]; // active container will be the same : item already removed
-        newContainers[overContainerIndex].applications = [
-          ...overContainer.applications,
-          movedItem,
-        ]; // over container will have the new item added to the end
+        const newContainers = [...prev];
+        const movedItem = activeContainer.applications[itemIndex];
+
+        newContainers[activeContainerIndex] = {
+          ...newContainers[activeContainerIndex],
+          applications: newContainers[activeContainerIndex].applications.filter(
+            (item) => item._id !== active.id
+          ),
+        };
+
+        newContainers[overContainerIndex] = {
+          ...newContainers[overContainerIndex],
+          applications: [
+            ...newContainers[overContainerIndex].applications,
+            movedItem,
+          ],
+        };
+
         return newContainers;
       });
     }
+
     setActiveId(null);
-  }
+  };
 
   return (
     <div className="flex flex-col min-h-screen p-6 gap-y-6">
@@ -163,7 +168,7 @@ function Home() {
           <Heading title="Welcome Back, Bhavesh!" />
           <SubHeading subtitle="Have a look at all the job applications" />
         </div>
-        <Button variant={"outline"}>
+        <Button variant="outline">
           <div className="flex gap-x-4 items-center">
             <ArchiveIcon />
             <p>Archived Applications</p>
@@ -185,12 +190,12 @@ function Home() {
                   title={container.title}
                   key={container.id}
                   applications={container.applications}
-                ></Container>
+                />
               ))}
             </SortableContext>
 
-            {/* DragOverlay keeps the dragged item visible */}
-            {/* <DragOverlay>
+            {/* DragOverlay */}
+            <DragOverlay>
               {activeId ? (
                 <JobApplicationCard
                   id={activeId}
@@ -201,7 +206,7 @@ function Home() {
                   }
                 />
               ) : null}
-            </DragOverlay> */}
+            </DragOverlay>
           </DndContext>
         </div>
       </div>
