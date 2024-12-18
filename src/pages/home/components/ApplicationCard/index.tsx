@@ -62,7 +62,7 @@ export default function JobApplicationCard({ id, jobApplication }: ItemsType) {
       <CardContent className="pb-2">
         <p className="text-sm text-muted-foreground mb-2">{companyName}</p>
       </CardContent>
-      <CardFooter className="flex justify-between items-center pt-2">
+      <CardFooter className="flex justify-between items-center pt-2 space-x-4">
         <p className="text-xs text-muted-foreground">
           Applied: {appliedOn && appliedOn.toDateString()}
         </p>

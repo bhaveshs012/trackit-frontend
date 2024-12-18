@@ -1,17 +1,20 @@
-import ContainerProps from "./container.type";
+import { useEffect, useRef, useState } from "react";
 import { SortableContext, useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import clsx from "clsx";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import { PlusCircle } from "lucide-react";
-import { useState } from "react";
-import { v4 as uuidv4 } from "uuid";
-import { useQueryClient } from "@tanstack/react-query";
 import AddApplicationModal from "@/components/modals/AddApplicationModal";
 import JobApplicationCard from "../ApplicationCard";
+import ContainerProps from "./container.type";
 
-const Container = ({ id, title, applications }: ContainerProps) => {
+const Container = ({
+  id,
+  title,
+  applications,
+  onIntersect,
+}: ContainerProps) => {
   const { attributes, setNodeRef, transform, transition, isDragging } =
     useSortable({
       id: id,
@@ -21,9 +24,33 @@ const Container = ({ id, title, applications }: ContainerProps) => {
     });
 
   const [isOpen, setIsOpen] = useState(false);
-  const queryClient = useQueryClient();
 
   const handleDialogClose = () => setIsOpen(false);
+
+  //* For Handling Infinite Scroll
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+  const scrollContainerRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!sentinelRef.current || !scrollContainerRef.current) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          onIntersect(id); // Trigger fetch when sentinel is visible
+        }
+      },
+      {
+        root: scrollContainerRef.current, // Observe within the scrollable container
+        rootMargin: "100px",
+        threshold: 0.1, // Trigger when 10% of the sentinel is visible
+      }
+    );
+
+    observer.observe(sentinelRef.current);
+
+    return () => observer.disconnect();
+  }, [title, onIntersect]);
 
   return (
     <div
@@ -59,7 +86,16 @@ const Container = ({ id, title, applications }: ContainerProps) => {
         </div>
       </div>
       <SortableContext items={applications.map((a) => a._id)}>
-        <div className="flex items-start flex-col gap-y-4">
+        <div
+          ref={scrollContainerRef}
+          className={clsx(
+            "flex flex-col gap-y-4 overflow-y-auto application-container",
+            "rounded-lg"
+          )}
+          style={{
+            maxHeight: "400px", // Adjust the height as needed
+          }}
+        >
           {applications.map((application) => (
             <JobApplicationCard
               key={application._id}
@@ -67,6 +103,7 @@ const Container = ({ id, title, applications }: ContainerProps) => {
               jobApplication={application}
             />
           ))}
+          <div ref={sentinelRef} className="sentinel" />
         </div>
       </SortableContext>
     </div>

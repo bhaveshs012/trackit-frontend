@@ -102,3 +102,7 @@ body::-webkit-scrollbar {
 .modal::-webkit-scrollbar {
   display: none;
 }
+
+.application-container::-webkit-scrollbar {
+  display: none;
+}

@@ -26,21 +26,49 @@ import apiClient from "@/api/apiClient";
 import { v4 as uuidv4 } from "uuid";
 import { ApplicationModel } from "./models/application.model";
 import JobApplicationCard from "./components/ApplicationCard";
+import { toast } from "@/components/hooks/use-toast";
 
 function Home() {
   const [containers, setContainers] = useState<ContainerType[]>([
-    { id: uuidv4(), title: "Applied", applications: [] },
-    { id: uuidv4(), title: "Interviewing", applications: [] },
-    { id: uuidv4(), title: "Offer Received", applications: [] },
+    {
+      id: uuidv4(),
+      title: "Applied",
+      applications: [],
+      currentPage: 1, // Initial currentPage for pagination
+      totalPages: 1,
+      onIntersect: (id: UniqueIdentifier) => {
+        console.log(`Intersected with status: ${id}`);
+      },
+    },
+    {
+      id: uuidv4(),
+      title: "Interviewing",
+      applications: [],
+      currentPage: 1,
+      totalPages: 1,
+      onIntersect: (id: UniqueIdentifier) => {
+        console.log(`Intersected with status: ${id}`);
+      },
+    },
+    {
+      id: uuidv4(),
+      title: "Offer Received",
+      applications: [],
+      currentPage: 1,
+      totalPages: 1,
+      onIntersect: (id: UniqueIdentifier) => {
+        console.log(`Intersected with status: ${id}`);
+      },
+    },
   ]);
-  const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
 
+  const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
 
-  // Fetch job applications by status
+  //* Initial Fetch :: Fetch job applications by status
   useEffect(() => {
     const fetchApplications = async () => {
       try {
@@ -55,7 +83,8 @@ function Home() {
                 appliedOn: new Date(app.appliedOn),
               })
             );
-            return { ...container, applications };
+            const totalPages = response.data.data.pagination.totalPages;
+            return { ...container, applications, totalPages };
           })
         );
         setContainers(updatedContainers);
@@ -66,6 +95,60 @@ function Home() {
 
     fetchApplications();
   }, []);
+
+  const handleIntersect = async (containerId: UniqueIdentifier) => {
+    const containerIndex = containers.findIndex((c) => c.id === containerId);
+
+    if (containerIndex === -1) return;
+
+    const currentPage = containers[containerIndex].currentPage;
+    const totalPages = containers[containerIndex].totalPages;
+
+    if (currentPage > totalPages) {
+      return;
+    }
+
+    try {
+      const response = await apiClient.get("/applications", {
+        params: {
+          status: containers[containerIndex].title,
+          page: currentPage + 1,
+          limit: 10,
+        },
+      });
+      console.log(response.data.data);
+
+      const newApplications = response.data.data.applications.map(
+        (app: ApplicationModel) => ({
+          ...app,
+          appliedOn: new Date(app.appliedOn),
+        })
+      );
+
+      setContainers((prev) => {
+        const updatedContainers = [...prev];
+        updatedContainers[containerIndex] = {
+          ...updatedContainers[containerIndex],
+          applications: [
+            ...updatedContainers[containerIndex].applications,
+            ...newApplications,
+          ],
+          currentPage: currentPage + 1,
+        };
+        return updatedContainers;
+      });
+    } catch (error) {
+      toast({
+        title: `Error fetching more applications for ( ${
+          containerIndex === 0
+            ? "Applied"
+            : containerIndex === 1
+            ? "Interviewing"
+            : "Offer Received"
+        }) state`,
+      });
+    }
+  };
 
   const findContainerById = (id: UniqueIdentifier) => {
     return containers.find((container) =>
@@ -79,7 +162,6 @@ function Home() {
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
-
     // If there's no valid drop target, reset active ID and exit
     if (!over) {
       setActiveId(null);
@@ -94,7 +176,6 @@ function Home() {
       setActiveId(null);
       return;
     }
-
     if (activeContainer.id === overContainer.id) {
       // Reordering within the same container
       const containerIndex = containers.findIndex(
@@ -156,7 +237,6 @@ function Home() {
         return newContainers;
       });
     }
-
     setActiveId(null);
   };
 
@@ -190,6 +270,9 @@ function Home() {
                   title={container.title}
                   key={container.id}
                   applications={container.applications}
+                  onIntersect={handleIntersect}
+                  totalPages={container.totalPages}
+                  currentPage={container.currentPage}
                 />
               ))}
             </SortableContext>
