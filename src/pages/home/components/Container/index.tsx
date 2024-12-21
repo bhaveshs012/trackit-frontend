@@ -5,7 +5,7 @@ import clsx from "clsx";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import { PlusCircle } from "lucide-react";
-import AddApplicationModal from "@/components/modals/AddApplicationModal";
+import ApplicationModal from "@/components/modals/ApplicationModal";
 import JobApplicationCard from "../ApplicationCard";
 import ContainerProps from "./container.type";
 
@@ -14,6 +14,7 @@ const Container = ({
   title,
   applications,
   onIntersect,
+  setContainers,
 }: ContainerProps) => {
   const { attributes, setNodeRef, transform, transition, isDragging } =
     useSortable({
@@ -77,7 +78,8 @@ const Container = ({
                 </div>
               </Button>
             </DialogTrigger>
-            <AddApplicationModal
+            <ApplicationModal
+              setContainers={setContainers}
               onClose={handleDialogClose}
               inEditMode={false}
               applicationStatus={title}
@@ -98,6 +100,7 @@ const Container = ({
         >
           {applications.map((application) => (
             <JobApplicationCard
+              setContainers={setContainers}
               key={application._id}
               id={application._id}
               jobApplication={application}

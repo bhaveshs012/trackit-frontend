@@ -27,6 +27,7 @@ import { v4 as uuidv4 } from "uuid";
 import { ApplicationModel } from "./models/application.model";
 import JobApplicationCard from "./components/ApplicationCard";
 import { toast } from "@/components/hooks/use-toast";
+import { useMutation } from "@tanstack/react-query";
 
 function Home() {
   const [containers, setContainers] = useState<ContainerType[]>([
@@ -36,6 +37,7 @@ function Home() {
       applications: [],
       currentPage: 1, // Initial currentPage for pagination
       totalPages: 1,
+      setContainers: () => {},
       onIntersect: (id: UniqueIdentifier) => {
         console.log(`Intersected with status: ${id}`);
       },
@@ -46,6 +48,7 @@ function Home() {
       applications: [],
       currentPage: 1,
       totalPages: 1,
+      setContainers: () => {},
       onIntersect: (id: UniqueIdentifier) => {
         console.log(`Intersected with status: ${id}`);
       },
@@ -55,6 +58,7 @@ function Home() {
       title: "Offer Received",
       applications: [],
       currentPage: 1,
+      setContainers: () => {},
       totalPages: 1,
       onIntersect: (id: UniqueIdentifier) => {
         console.log(`Intersected with status: ${id}`);
@@ -116,7 +120,6 @@ function Home() {
           limit: 10,
         },
       });
-      console.log(response.data.data);
 
       const newApplications = response.data.data.applications.map(
         (app: ApplicationModel) => ({
@@ -236,9 +239,48 @@ function Home() {
 
         return newContainers;
       });
+
+      //* Hit the API to change application status
+      const applicationId = activeContainer.applications[itemIndex]._id;
+      const applicationStatus =
+        overContainerIndex === 0
+          ? "Applied"
+          : overContainerIndex === 1
+          ? "Interviewing"
+          : "Offer Received";
+      mutation.mutate({ applicationId, applicationStatus });
     }
     setActiveId(null);
   };
+
+  //* Change application status
+  const changeApplicationStatus = async (applicationData: {
+    applicationId: string;
+    applicationStatus: "Applied" | "Interviewing" | "Offer Received";
+  }) => {
+    const response = await apiClient.patch(
+      `/applications/${applicationData.applicationId}`,
+      {
+        applicationStatus: applicationData.applicationStatus,
+      }
+    );
+    return response.data.data;
+  };
+
+  const mutation = useMutation({
+    mutationFn: changeApplicationStatus,
+    onSuccess: () => {
+      toast({
+        title: "Job application status has been changed successfully !!",
+      });
+    },
+    onError(error, variables, context) {
+      toast({
+        title: "Error occurred while updating the job application status !!",
+        description: error.toString(),
+      });
+    },
+  });
 
   return (
     <div className="flex flex-col min-h-screen p-6 gap-y-6">
@@ -267,6 +309,7 @@ function Home() {
               {containers.map((container) => (
                 <Container
                   id={container.id}
+                  setContainers={setContainers}
                   title={container.title}
                   key={container.id}
                   applications={container.applications}
@@ -281,6 +324,7 @@ function Home() {
             <DragOverlay>
               {activeId ? (
                 <JobApplicationCard
+                  setContainers={setContainers}
                   id={activeId}
                   jobApplication={
                     findContainerById(activeId)?.applications.find(

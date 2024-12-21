@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import ContainerType from "../../pages/home/components/Container/container.type";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -7,6 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { toast } from "@/hooks/use-toast";
 import {
   DialogContent,
   DialogDescription,
@@ -28,8 +30,11 @@ import { convertInputStringToDate } from "@/utils/input_date_formatter";
 import { Textarea } from "@/components/ui/textarea";
 import apiClient from "@/api/apiClient";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { ApplicationModel } from "@/pages/home/models/application.model";
-import { toast } from "@/hooks/use-toast";
+import LoadingScreen from "@/pages/common/LoadingScreen";
+import ErrorScreen from "@/pages/common/ErrorScreen";
+import { useEffect } from "react";
+import { ExternalLink } from "lucide-react";
+import ConfirmDeleteDialog from "../alert-dialogs/ConfirmDelete";
 
 //* Form Schema
 const formSchema = z
@@ -78,7 +83,8 @@ interface AddApplicationModalProps {
   onClose: () => void; // Explicit type for the onClose prop
   inEditMode?: boolean;
   applicationId?: string;
-  applicationStatus:
+  setContainers: React.Dispatch<React.SetStateAction<ContainerType[]>>;
+  applicationStatus?:
     | "Applied"
     | "Interviewing"
     | "Offer Received"
@@ -87,9 +93,11 @@ interface AddApplicationModalProps {
     | "Withdrawn";
 }
 
-const AddApplicationModal: React.FC<AddApplicationModalProps> = ({
+const ApplicationModal: React.FC<AddApplicationModalProps> = ({
   onClose,
+  setContainers,
   inEditMode = false,
+  applicationId,
   applicationStatus,
 }) => {
   const form = useForm<z.infer<typeof formSchema>>({
@@ -125,7 +133,58 @@ const AddApplicationModal: React.FC<AddApplicationModalProps> = ({
     queryFn: getAllResumes,
   });
 
-  const addNewApplication = async (newApplication: ApplicationModel) => {
+  const { reset } = form;
+
+  //* When in edit mode :: fetch the application details
+  const getApplicationDetailsById = async (
+    applicationId: string | undefined
+  ) => {
+    if (applicationId === undefined)
+      return { message: "No interview details found" };
+    const response = await apiClient.get(`/applications/${applicationId}`);
+    return response.data.data;
+  };
+
+  const {
+    data: applicationDetails,
+    error: applicationDetailsError,
+    isLoading: applicationDetailsIsLoading,
+  } = useQuery({
+    queryKey: ["getApplicationDetailsById", applicationId],
+    queryFn: () => getApplicationDetailsById(applicationId),
+    enabled: !!applicationId,
+  });
+
+  useEffect(() => {
+    if (applicationDetails && Object.keys(applicationDetails).length > 0) {
+      reset({
+        companyName: applicationDetails.companyName || "",
+        jobLink: applicationDetails.jobLink || "",
+        applicationStatus: applicationDetails.applicationStatus || "",
+        notes: applicationDetails.notes || "",
+        position: applicationDetails.position || "",
+        resumeUploaded: "",
+        appliedOn: applicationDetails.appliedOn.split("T")[0],
+      });
+    }
+  }, [applicationId, applicationDetails, reset]);
+
+  const addNewApplication = async (newApplication: {
+    companyName: string;
+    position: string;
+    jobLink: string;
+    applicationStatus:
+      | "Applied"
+      | "Interviewing"
+      | "Offer Received"
+      | "Accepted"
+      | "Rejected"
+      | "Withdrawn";
+    resumeUploaded: string;
+    coverLetterUploaded?: string;
+    notes: string;
+    appliedOn: Date;
+  }) => {
     const response = await apiClient.post("applications", newApplication);
     return response.data.data;
   };
@@ -133,7 +192,6 @@ const AddApplicationModal: React.FC<AddApplicationModalProps> = ({
   const mutation = useMutation({
     mutationFn: addNewApplication,
     onSuccess: () => {
-      //queryClient.invalidateQueries({ queryKey: ["getAllResumes"] });
       toast({
         title: "Job application has been saved successfully !!",
       });
@@ -148,6 +206,45 @@ const AddApplicationModal: React.FC<AddApplicationModalProps> = ({
     },
   });
 
+  //* Delete the Job Application
+  const deleteApplicationById = async () => {
+    const response = await apiClient.delete(`applications/${applicationId}`);
+    return response.data.data;
+  };
+
+  const handleStateChange = () => {
+    setContainers((prevContainers) =>
+      prevContainers.map((container) => ({
+        ...container,
+        applications: container.applications.filter(
+          (app) => app._id !== applicationId
+        ),
+      }))
+    );
+  };
+
+  const deleteApplicationMutation = useMutation({
+    mutationFn: deleteApplicationById,
+    onSuccess: () => {
+      handleStateChange();
+      toast({
+        title: "Job Application has been deleted successfully !!",
+      });
+      onClose();
+    },
+    onError(error, variables, context) {
+      toast({
+        title: "Error occurred while deleting the job application !!",
+        description: error.toString(),
+      });
+      onClose();
+    },
+  });
+
+  const handleDeleteApplication = () => {
+    deleteApplicationMutation.mutate();
+  };
+
   function onSubmit(values: z.infer<typeof formSchema>) {
     const newApplication = {
       companyName: values.companyName,
@@ -161,9 +258,17 @@ const AddApplicationModal: React.FC<AddApplicationModalProps> = ({
     mutation.mutate(newApplication);
   }
 
-  if (isLoading) {
-    return <p>Loading...</p>;
+  if (isLoading || applicationDetailsIsLoading) {
+    return <LoadingScreen />;
   }
+
+  if (error || applicationDetailsError)
+    return (
+      <ErrorScreen
+        title="Some error occurred !!"
+        description="Please try again after some time"
+      />
+    );
 
   return (
     <DialogContent className="modal overflow-auto max-h-screen scroll-mb-4 m-4 flex flex-col items-center max-w-xl w-full">
@@ -243,42 +348,60 @@ const AddApplicationModal: React.FC<AddApplicationModalProps> = ({
                 </FormItem>
               )}
             />
-            <FormField
-              control={form.control}
-              name="resumeUploaded"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Resume Uploaded</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
+            {!inEditMode ? (
+              <FormField
+                control={form.control}
+                name="resumeUploaded"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Resume Uploaded</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select the uploaded resume" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {resumes.map(
+                          (
+                            resume: {
+                              resumeLink: string;
+                              fileName: string;
+                              skills: string[];
+                            },
+                            index: number
+                          ) => (
+                            <SelectItem key={index} value={resume.resumeLink}>
+                              {resume.fileName} - {resume.skills.join(", ")}
+                            </SelectItem>
+                          )
+                        )}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            ) : (
+              <div className="flex flex-col gap-y-4">
+                <FormLabel>Resume Uploaded</FormLabel>
+                <Button variant="outline" size="sm" asChild>
+                  <a
+                    href={
+                      applicationDetails && applicationDetails.resumeUploaded
+                    }
+                    target="_blank"
+                    rel="noopener noreferrer"
                   >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select the uploaded resume" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {resumes.map(
-                        (
-                          resume: {
-                            resumeLink: string;
-                            fileName: string;
-                            skills: string[];
-                          },
-                          index: number
-                        ) => (
-                          <SelectItem key={index} value={resume.resumeLink}>
-                            {resume.fileName} - {resume.skills.join(", ")}
-                          </SelectItem>
-                        )
-                      )}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                    <ExternalLink className="h-4 w-4 mr-2" />
+                    View Resume
+                  </a>
+                </Button>
+              </div>
+            )}
             <FormField
               control={form.control}
               name="notes"
@@ -319,13 +442,13 @@ const AddApplicationModal: React.FC<AddApplicationModalProps> = ({
                   : "Save the Job Application"}
               </Button>
             </div>
-            {/* {inEditMode && (
+            {inEditMode && (
               <ConfirmDeleteDialog
-                onConfirm={handleDeleteContact}
+                onConfirm={handleDeleteApplication}
                 description="This action cannot be undone. This will permanently delete the
             contact and remove your data from our servers."
               />
-            )} */}
+            )}
           </form>
         </Form>
       </div>
@@ -333,4 +456,4 @@ const AddApplicationModal: React.FC<AddApplicationModalProps> = ({
   );
 };
 
-export default AddApplicationModal;
+export default ApplicationModal;

@@ -12,13 +12,22 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ExternalLink, GripVertical } from "lucide-react";
+import { useState } from "react";
+import { Dialog, DialogTrigger } from "@/components/ui/dialog";
+import ApplicationModal from "@/components/modals/ApplicationModal";
+import ContainerType from "../Container/container.type";
 
 type ItemsType = {
   id: UniqueIdentifier;
   jobApplication: ApplicationModel | null;
+  setContainers: React.Dispatch<React.SetStateAction<ContainerType[]>>;
 };
 
-export default function JobApplicationCard({ id, jobApplication }: ItemsType) {
+export default function JobApplicationCard({
+  id,
+  jobApplication,
+  setContainers,
+}: ItemsType) {
   const {
     attributes,
     listeners,
@@ -34,6 +43,9 @@ export default function JobApplicationCard({ id, jobApplication }: ItemsType) {
   });
 
   const { companyName, position, jobLink, appliedOn } = jobApplication || {};
+
+  const [isOpen, setIsOpen] = useState<boolean>(false);
+  const handleDialogClose = () => setIsOpen(false);
 
   return (
     <Card
@@ -66,12 +78,24 @@ export default function JobApplicationCard({ id, jobApplication }: ItemsType) {
         <p className="text-xs text-muted-foreground">
           Applied: {appliedOn && appliedOn.toDateString()}
         </p>
-        <Button variant="outline" size="sm" asChild>
-          <a href={jobLink} target="_blank" rel="noopener noreferrer">
-            <ExternalLink className="h-4 w-4 mr-2" />
-            View Job Details
-          </a>
-        </Button>
+        <div>
+          <Dialog open={isOpen} onOpenChange={setIsOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline" size="sm" asChild>
+                <div className="flex gap-x-4 items-center">
+                  <ExternalLink />
+                  <p>View Details</p>
+                </div>
+              </Button>
+            </DialogTrigger>
+            <ApplicationModal
+              setContainers={setContainers}
+              onClose={handleDialogClose}
+              inEditMode={true}
+              applicationId={jobApplication?._id}
+            />
+          </Dialog>
+        </div>
       </CardFooter>
     </Card>
   );
