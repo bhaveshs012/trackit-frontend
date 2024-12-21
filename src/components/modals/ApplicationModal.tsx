@@ -191,6 +191,30 @@ const ApplicationModal: React.FC<AddApplicationModalProps> = ({
 
   const mutation = useMutation({
     mutationFn: addNewApplication,
+    onSettled(data, error, variables, context) {
+      if (!error) {
+        setContainers((prevContainers) =>
+          prevContainers.map((container) => {
+            // If the container title matches the new application's status, append the new application
+            if (data?.applicationStatus === container.title) {
+              return {
+                ...container,
+                applications: [
+                  ...container.applications,
+                  {
+                    // change the applied on field to date format from string
+                    ...data,
+                    appliedOn: new Date(data.appliedOn),
+                  },
+                ],
+              };
+            }
+            // If no match, return the container as is
+            return container;
+          })
+        );
+      }
+    },
     onSuccess: () => {
       toast({
         title: "Job application has been saved successfully !!",
