@@ -32,9 +32,10 @@ import apiClient from "@/api/apiClient";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import LoadingScreen from "@/pages/common/LoadingScreen";
 import ErrorScreen from "@/pages/common/ErrorScreen";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { ExternalLink } from "lucide-react";
 import ConfirmDeleteDialog from "../alert-dialogs/ConfirmDelete";
+import { ApplicationModel } from "@/pages/home/models/application.model";
 
 //* Form Schema
 const formSchema = z
@@ -133,7 +134,7 @@ const ApplicationModal: React.FC<AddApplicationModalProps> = ({
     queryFn: getAllResumes,
   });
 
-  const { reset } = form;
+  const { reset, watch } = form;
 
   //* When in edit mode :: fetch the application details
   const getApplicationDetailsById = async (
@@ -163,7 +164,7 @@ const ApplicationModal: React.FC<AddApplicationModalProps> = ({
         applicationStatus: applicationDetails.applicationStatus || "",
         notes: applicationDetails.notes || "",
         position: applicationDetails.position || "",
-        resumeUploaded: "",
+        resumeUploaded: applicationDetails.resumeUploaded,
         appliedOn: applicationDetails.appliedOn.split("T")[0],
       });
     }
@@ -230,27 +231,112 @@ const ApplicationModal: React.FC<AddApplicationModalProps> = ({
     },
   });
 
+  //* Edit the job application
+  const editApplicationById = async (newApplication: {
+    companyName: string;
+    position: string;
+    jobLink: string;
+    applicationStatus:
+      | "Applied"
+      | "Interviewing"
+      | "Offer Received"
+      | "Accepted"
+      | "Rejected"
+      | "Withdrawn";
+    resumeUploaded: string;
+    coverLetterUploaded?: string;
+    notes: string;
+    appliedOn: Date;
+  }) => {
+    const response = await apiClient.patch(
+      `/applications/${applicationId}`,
+      newApplication
+    );
+    return response.data.data;
+  };
+
+  //* Check if form state has changed
+  const [valuesChanged, setValuesChanged] = useState<boolean>(false);
+  const checkForChange = () => {
+    if (applicationDetails) {
+      const formValues = form.getValues();
+      const hasChanged = Object.entries(formValues).some(([key, value]) => {
+        const detailValue = applicationDetails[key];
+        // Special handling for "scheduledOn" to compare only the date part
+        if (key === "appliedOn") {
+          return (
+            detailValue &&
+            value !== new Date(detailValue).toISOString().split("T")[0]
+          );
+        }
+        return detailValue && value.toString() !== detailValue.toString();
+      });
+      setValuesChanged(hasChanged);
+    }
+  };
+
+  useEffect(() => {
+    checkForChange();
+  }, [watch()]);
+
+  const editApplicationMutation = useMutation({
+    mutationFn: editApplicationById,
+    onSuccess: () => {
+      toast({
+        title: "Job Application has been updated successfully !!",
+      });
+      onClose();
+    },
+    onSettled(data, error, variables, context) {
+      if (!error) {
+        setContainers((prevContainers) =>
+          prevContainers.map((container) => {
+            if (data?.applicationStatus === container.title) {
+              return {
+                ...container,
+                applications: container.applications.map((application) =>
+                  application._id === data?._id
+                    ? {
+                        // If application matches, update it with new data
+                        ...application,
+                        ...data, // Spread the new data over the existing application
+                        appliedOn: new Date(data.appliedOn), // Ensure appliedOn is converted to Date
+                      }
+                    : application
+                ),
+              };
+            }
+            return container; // Return the container as is if no match
+          })
+        );
+      }
+    },
+    onError(error, variables, context) {
+      toast({
+        title: "Error occurred while updating the job application !!",
+        description: error.toString(),
+      });
+      onClose();
+    },
+  });
+
   //* Delete the Job Application
   const deleteApplicationById = async () => {
     const response = await apiClient.delete(`applications/${applicationId}`);
     return response.data.data;
   };
 
-  const handleStateChange = () => {
-    setContainers((prevContainers) =>
-      prevContainers.map((container) => ({
-        ...container,
-        applications: container.applications.filter(
-          (app) => app._id !== applicationId
-        ),
-      }))
-    );
-  };
-
   const deleteApplicationMutation = useMutation({
     mutationFn: deleteApplicationById,
     onSuccess: () => {
-      handleStateChange();
+      setContainers((prevContainers) =>
+        prevContainers.map((container) => ({
+          ...container,
+          applications: container.applications.filter(
+            (app) => app._id !== applicationId
+          ),
+        }))
+      );
       toast({
         title: "Job Application has been deleted successfully !!",
       });
@@ -279,7 +365,9 @@ const ApplicationModal: React.FC<AddApplicationModalProps> = ({
       notes: values.notes,
       appliedOn: convertInputStringToDate(values.appliedOn),
     };
-    mutation.mutate(newApplication);
+    if (inEditMode) {
+      editApplicationMutation.mutate(newApplication);
+    } else mutation.mutate(newApplication);
   }
 
   if (isLoading || applicationDetailsIsLoading) {
@@ -372,13 +460,13 @@ const ApplicationModal: React.FC<AddApplicationModalProps> = ({
                 </FormItem>
               )}
             />
-            {!inEditMode ? (
-              <FormField
-                control={form.control}
-                name="resumeUploaded"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Resume Uploaded</FormLabel>
+            <FormField
+              control={form.control}
+              name="resumeUploaded"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Resume Uploaded</FormLabel>
+                  {!inEditMode ? (
                     <Select
                       onValueChange={field.onChange}
                       defaultValue={field.value}
@@ -405,27 +493,24 @@ const ApplicationModal: React.FC<AddApplicationModalProps> = ({
                         )}
                       </SelectContent>
                     </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            ) : (
-              <div className="flex flex-col gap-y-4">
-                <FormLabel>Resume Uploaded</FormLabel>
-                <Button variant="outline" size="sm" asChild>
-                  <a
-                    href={
-                      applicationDetails && applicationDetails.resumeUploaded
-                    }
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    <ExternalLink className="h-4 w-4 mr-2" />
-                    View Resume
-                  </a>
-                </Button>
-              </div>
-            )}
+                  ) : (
+                    <div className="flex flex-col gap-y-4">
+                      <Button variant="outline" size="sm" asChild>
+                        <a
+                          href={applicationDetails?.resumeUploaded || "#"}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          <ExternalLink className="h-4 w-4 mr-2" />
+                          View Resume
+                        </a>
+                      </Button>
+                    </div>
+                  )}
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             <FormField
               control={form.control}
               name="notes"
@@ -460,7 +545,13 @@ const ApplicationModal: React.FC<AddApplicationModalProps> = ({
               )}
             />
             <div className="flex justify-center">
-              <Button type="submit" className={`w-full font-semibol`}>
+              <Button
+                type="submit"
+                className={`w-full font-semibold ${
+                  !valuesChanged ? "cursor-not-allowed" : "cursor-pointer"
+                }`}
+                disabled={!valuesChanged}
+              >
                 {inEditMode
                   ? "Update Job Application"
                   : "Save the Job Application"}
