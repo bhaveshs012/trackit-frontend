@@ -18,7 +18,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import ContactModel from "@/pages/contacts/models/contact.model";
+import { ContactModel } from "@/pages/contacts/models/contact.model";
 import apiClient from "@/api/apiClient";
 import { toast } from "@/hooks/use-toast";
 import { useEffect, useState } from "react";

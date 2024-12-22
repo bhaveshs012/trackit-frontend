@@ -8,7 +8,7 @@ interface ContactModel {
   linkedInProfile: string;
 }
 
-export interface EditContactModel {
+interface EditContactModel {
   _id: string;
   firstName: string;
   lastName: string;
@@ -19,4 +19,4 @@ export interface EditContactModel {
   phoneNumber: string;
 }
 
-export default ContactModel;
+export type { ContactModel, EditContactModel };
