@@ -274,7 +274,7 @@ function Home() {
         title: "Job application status has been changed successfully !!",
       });
     },
-    onError(error, variables, context) {
+    onError(error) {
       toast({
         title: "Error occurred while updating the job application status !!",
         description: error.toString(),

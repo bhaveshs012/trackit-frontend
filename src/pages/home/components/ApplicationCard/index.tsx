@@ -42,7 +42,7 @@ export default function JobApplicationCard({
     },
   });
 
-  const { companyName, position, jobLink, appliedOn } = jobApplication || {};
+  const { companyName, position, appliedOn } = jobApplication || {};
 
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const handleDialogClose = () => setIsOpen(false);

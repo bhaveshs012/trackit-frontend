@@ -13,6 +13,7 @@ import apiClient from "@/api/apiClient";
 import LoadingScreen from "../common/LoadingScreen";
 import Pagination from "@/components/pagination/Pagination";
 import EmptyResultsScreen from "../common/EmptyResults";
+import ErrorScreen from "../common/ErrorScreen";
 
 function Resumes() {
   const [isOpen, setIsOpen] = useState(false);
@@ -51,6 +52,13 @@ function Resumes() {
   });
 
   if (isLoading) return <LoadingScreen />;
+  if (error)
+    return (
+      <ErrorScreen
+        title="Some error occured !!"
+        description="Could not fetch resumes"
+      />
+    );
 
   return (
     <div className="flex flex-col min-h-screen p-6 gap-y-6">
