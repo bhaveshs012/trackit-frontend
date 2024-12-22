@@ -10,6 +10,7 @@ import {
   Contacts,
   Dashboard,
   Profile,
+  ArchivedApplications,
 } from "@/pages";
 import ProtectedRoute from "@/wrappers/ProtectedRoute";
 import PublicRoute from "@/wrappers/PublicRoute";
@@ -114,6 +115,10 @@ const router = createBrowserRouter(
               ),
             },
           ],
+        },
+        {
+          path: "/applications/archived",
+          element: <ArchivedApplications />,
         },
         {
           path: "*",

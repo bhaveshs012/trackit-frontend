@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const apiClient = axios.create({
-  baseURL: "http://localhost:8000/api/v1",
+  baseURL: "https://trackit-backend-bgve.onrender.com/api/v1",
   withCredentials: true,
 });
 
@@ -27,7 +27,7 @@ apiClient.interceptors.response.use(
 
       try {
         const response = await axios.post(
-          "http://localhost:8000/api/v1/users/refresh-token",
+          "https://trackit-backend-bgve.onrender.com/api/v1/users/refresh-token",
           { withCredentials: true } // Ensure this sends the cookies
         );
 

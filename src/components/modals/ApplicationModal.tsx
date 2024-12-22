@@ -35,7 +35,6 @@ import ErrorScreen from "@/pages/common/ErrorScreen";
 import { useEffect, useState } from "react";
 import { ExternalLink } from "lucide-react";
 import ConfirmDeleteDialog from "../alert-dialogs/ConfirmDelete";
-import { ApplicationModel } from "@/pages/home/models/application.model";
 
 //* Form Schema
 const formSchema = z
@@ -161,7 +160,7 @@ const ApplicationModal: React.FC<AddApplicationModalProps> = ({
       reset({
         companyName: applicationDetails.companyName || "",
         jobLink: applicationDetails.jobLink || "",
-        applicationStatus: applicationDetails.applicationStatus || "",
+        applicationStatus: applicationDetails.applicationStatus,
         notes: applicationDetails.notes || "",
         position: applicationDetails.position || "",
         resumeUploaded: applicationDetails.resumeUploaded,
@@ -192,7 +191,7 @@ const ApplicationModal: React.FC<AddApplicationModalProps> = ({
 
   const mutation = useMutation({
     mutationFn: addNewApplication,
-    onSettled(data, error, variables, context) {
+    onSettled(data, error) {
       if (!error) {
         setContainers((prevContainers) =>
           prevContainers.map((container) => {
@@ -222,7 +221,7 @@ const ApplicationModal: React.FC<AddApplicationModalProps> = ({
       });
       onClose();
     },
-    onError(error, variables, context) {
+    onError(error) {
       toast({
         title: "Error occurred while saving the job application !!",
         description: error.toString(),
@@ -287,31 +286,48 @@ const ApplicationModal: React.FC<AddApplicationModalProps> = ({
       });
       onClose();
     },
-    onSettled(data, error, variables, context) {
+    onSettled(data, error) {
+      //* To handle application status change : we need to move application between containers when status changes from modal as well
       if (!error) {
+        //* Delete the application from the container
+        setContainers((prevContainers) =>
+          prevContainers.map((container) => ({
+            ...container,
+            applications: container.applications.filter(
+              (app) => app._id !== applicationId
+            ),
+          }))
+        );
+        //* Then add the application to the relevant container
         setContainers((prevContainers) =>
           prevContainers.map((container) => {
-            if (data?.applicationStatus === container.title) {
-              return {
-                ...container,
-                applications: container.applications.map((application) =>
-                  application._id === data?._id
-                    ? {
-                        // If application matches, update it with new data
-                        ...application,
-                        ...data, // Spread the new data over the existing application
-                        appliedOn: new Date(data.appliedOn), // Ensure appliedOn is converted to Date
-                      }
-                    : application
-                ),
-              };
+            if (
+              ["Applied", "Interviewing", "Offer Received"].includes(
+                data?.applicationStatus
+              )
+            ) {
+              if (data?.applicationStatus === container.title) {
+                return {
+                  ...container,
+                  applications: [
+                    ...container.applications,
+                    {
+                      // change the applied on field to date format from string
+                      ...data,
+                      appliedOn: new Date(data.appliedOn),
+                    },
+                  ],
+                };
+              }
+              return container;
             }
-            return container; // Return the container as is if no match
+            //* Else do nothing just return the container as it is
+            return container;
           })
         );
       }
     },
-    onError(error, variables, context) {
+    onError(error) {
       toast({
         title: "Error occurred while updating the job application !!",
         description: error.toString(),
@@ -342,7 +358,7 @@ const ApplicationModal: React.FC<AddApplicationModalProps> = ({
       });
       onClose();
     },
-    onError(error, variables, context) {
+    onError(error) {
       toast({
         title: "Error occurred while deleting the job application !!",
         description: error.toString(),
@@ -449,17 +465,47 @@ const ApplicationModal: React.FC<AddApplicationModalProps> = ({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Application Status</FormLabel>
-                  <FormControl>
-                    <Input
-                      className="cursor-not-allowed"
-                      readOnly={true}
-                      {...field}
-                    />
-                  </FormControl>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {[
+                        "Applied",
+                        "Interviewing",
+                        "Offer Received",
+                        "Accepted",
+                        "Rejected",
+                        "Withdrawn",
+                      ].map((value) => (
+                        <SelectItem key={value} value={value}>
+                          {value}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}
             />
+            {/* <FormField
+              control={form.control}
+              name="applicationStatus"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Application Status</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            /> */}
             <FormField
               control={form.control}
               name="resumeUploaded"

@@ -136,7 +136,7 @@ const Interviews: React.FC<InterviewsPageProps> = ({ displayArchived }) => {
       </div>
 
       {/* Interview Cards Section */}
-      <div className="flex w-full flex-wrap">
+      <div className="flex w-full flex-wrap gap-4">
         {data && data.length === 0 ? (
           <EmptyResultsScreen
             title="No active Interview Schedules Found !!"

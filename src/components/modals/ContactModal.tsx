@@ -142,7 +142,7 @@ const ContactModal: React.FC<AddContactModalProps> = ({
       });
       onClose();
     },
-    onError(error, variables, context) {
+    onError(error) {
       toast({
         title: "Error occurred while adding contact !!",
         description: error.toString(),
@@ -160,7 +160,7 @@ const ContactModal: React.FC<AddContactModalProps> = ({
       });
       onClose();
     },
-    onError(error, variables, context) {
+    onError(error) {
       toast({
         title: "Error occurred while updating contact !!",
         description: error.toString(),
@@ -178,7 +178,7 @@ const ContactModal: React.FC<AddContactModalProps> = ({
       });
       onClose();
     },
-    onError(error, variables, context) {
+    onError(error) {
       toast({
         title: "Error occurred while deleting contact !!",
         description: error.toString(),

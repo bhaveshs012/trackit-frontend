@@ -7,6 +7,7 @@ import Resumes from "./resumes/Resumes";
 import Contacts from "./contacts/Contacts";
 import Dashboard from "./dashboard/Dashboard";
 import Profile from "./profile/Profile";
+import ArchivedApplications from "./archived_applications/ArchivedApplications";
 export {
   Login,
   Signup,
@@ -17,4 +18,5 @@ export {
   Contacts,
   Dashboard,
   Profile,
+  ArchivedApplications,
 };

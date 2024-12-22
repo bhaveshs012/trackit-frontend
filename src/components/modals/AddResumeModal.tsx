@@ -108,7 +108,7 @@ const AddResumeModal: React.FC<AddResumeModalProps> = ({ onClose }) => {
       });
       onClose();
     },
-    onError(error, variables, context) {
+    onError(error) {
       toast({
         title: "Error occurred while saving the resume !!",
         description: error.toString(),

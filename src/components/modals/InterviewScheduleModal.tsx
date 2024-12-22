@@ -174,7 +174,7 @@ const InterviewScheduleModal: React.FC<AddInterviewScheduleModalProps> = ({
       });
       onClose();
     },
-    onError(error, variables, context) {
+    onError(error) {
       toast({
         title: "Error occurred while saving the schedule !!",
         description: error.toString(),
@@ -192,7 +192,7 @@ const InterviewScheduleModal: React.FC<AddInterviewScheduleModalProps> = ({
       });
       onClose();
     },
-    onError(error, variables, context) {
+    onError(error) {
       toast({
         title: "Error occurred while updating interview schedule !!",
         description: error.toString(),
@@ -210,7 +210,7 @@ const InterviewScheduleModal: React.FC<AddInterviewScheduleModalProps> = ({
       });
       onClose();
     },
-    onError(error, variables, context) {
+    onError(error) {
       toast({
         title: "Error occurred while deleting the interview schedule !!",
         description: error.toString(),
