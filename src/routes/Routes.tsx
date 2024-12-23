@@ -10,7 +10,8 @@ import {
   Contacts,
   Dashboard,
   Profile,
-  ArchivedApplications,
+  ArchivedApplicationsDashboard,
+  ArchivedApplicationsMain,
 } from "@/pages";
 import ProtectedRoute from "@/wrappers/ProtectedRoute";
 import PublicRoute from "@/wrappers/PublicRoute";
@@ -73,6 +74,24 @@ const router = createBrowserRouter(
               ),
             },
             {
+              path: "applications/archived",
+              element: (
+                <ProtectedRoute redirectTo="/login">
+                  <Outlet />
+                </ProtectedRoute>
+              ),
+              children: [
+                {
+                  index: true,
+                  element: <ArchivedApplicationsDashboard />,
+                },
+                {
+                  path: ":applicationStatus",
+                  element: <ArchivedApplicationsMain />,
+                },
+              ],
+            },
+            {
               path: "interviews",
               element: (
                 <ProtectedRoute redirectTo="/login">
@@ -115,10 +134,6 @@ const router = createBrowserRouter(
               ),
             },
           ],
-        },
-        {
-          path: "/applications/archived",
-          element: <ArchivedApplications />,
         },
         {
           path: "*",

@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { X } from "lucide-react";
+import { LogOut, X } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -24,9 +24,11 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import apiClient from "@/api/apiClient";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import LoadingScreen from "../common/LoadingScreen";
 import ErrorScreen from "../common/ErrorScreen";
+import { toast } from "@/components/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
 
 const userDetailsFormSchema = z.object({
   firstName: z
@@ -149,6 +151,34 @@ function Profile() {
     }
   };
 
+  //* Logout user
+  const logoutUser = async () => {
+    const response = await apiClient.post(`/users/logout`);
+    return response.data.data;
+  };
+
+  const navigate = useNavigate();
+
+  const logoutMutation = useMutation({
+    mutationFn: logoutUser,
+    onSuccess: () => {
+      toast({
+        title: "User logged out successfully !!",
+      });
+      navigate("/");
+    },
+    onError(error) {
+      toast({
+        title: "Error occurred while logging out user !!",
+        description: error.toString(),
+      });
+    },
+  });
+
+  const handleLogout = () => {
+    logoutMutation.mutate();
+  };
+
   const onSubmit = (values: z.infer<typeof userDetailsFormSchema>) => {
     console.log(values);
   };
@@ -159,11 +189,23 @@ function Profile() {
   return (
     <div className="flex justify-start flex-col min-h-screen p-6 gap-y-6">
       {/* Header Section */}
-      <div className="flex flex-col gap-y-2 justify-start">
-        <h4 className="scroll-m-20 text-2xl font-semibold tracking-tight ">
-          {"Profile"}
-        </h4>
-        <SubHeading subtitle="Manage your user profile from here." />
+      <div className="flex justify-between">
+        <div className="flex flex-col gap-y-2 justify-start">
+          <h4 className="scroll-m-20 text-2xl font-semibold tracking-tight ">
+            {"Profile"}
+          </h4>
+          <SubHeading subtitle="Manage your user profile from here." />
+        </div>
+        <div>
+          <Button
+            className="z-50"
+            variant={"default"}
+            onClick={handleLogout}
+            title="Logout"
+          >
+            <LogOut />
+          </Button>
+        </div>
       </div>
       {/* Profile Details Display Section */}
       <div className="w-full space-y-4 max-w-3xl border-2 p-6 rounded-lg shadow-lg">
@@ -312,7 +354,8 @@ function Profile() {
               <Button
                 type="submit"
                 className="w-full font-semibold"
-                disabled={!valuesChanged}
+                // disabled={!valuesChanged}
+                disabled={true}
               >
                 Update Profile
               </Button>

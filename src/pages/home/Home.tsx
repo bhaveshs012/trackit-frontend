@@ -28,8 +28,10 @@ import { ApplicationModel } from "./models/application.model";
 import JobApplicationCard from "./components/ApplicationCard";
 import { toast } from "@/components/hooks/use-toast";
 import { useMutation } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 
 function Home() {
+  const navigate = useNavigate();
   const [containers, setContainers] = useState<ContainerType[]>([
     {
       id: uuidv4(),
@@ -290,7 +292,10 @@ function Home() {
           <Heading title="Welcome Back, Bhavesh!" />
           <SubHeading subtitle="Have a look at all the job applications" />
         </div>
-        <Button variant="outline">
+        <Button
+          variant="outline"
+          onClick={() => navigate("/dashboard/applications/archived")}
+        >
           <div className="flex gap-x-4 items-center">
             <ArchiveIcon />
             <p>Archived Applications</p>
