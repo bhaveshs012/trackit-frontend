@@ -151,6 +151,35 @@ function Profile() {
     }
   };
 
+  //* Update User details
+  const updateUserDetails = async (updates: {
+    firstName?: string;
+    lastName?: string;
+    password?: string;
+    skills?: string[];
+    phoneNumber?: string;
+    aspiringRole?: string;
+    experienceLevel?: string;
+  }) => {
+    const response = await apiClient.patch("users/update-profile", updates);
+    return response.data.data;
+  };
+
+  const updateUserDetailsMutation = useMutation({
+    mutationFn: updateUserDetails,
+    onSuccess: () => {
+      toast({
+        title: "User details updated successfully !!",
+      });
+    },
+    onError(error) {
+      toast({
+        title: "Error occurred while updating user details !!",
+        description: error.toString(),
+      });
+    },
+  });
+
   //* Logout user
   const logoutUser = async () => {
     const response = await apiClient.post(`/users/logout`);
@@ -180,7 +209,22 @@ function Profile() {
   };
 
   const onSubmit = (values: z.infer<typeof userDetailsFormSchema>) => {
-    console.log(values);
+    const newUser: {
+      firstName?: string;
+      lastName?: string;
+      skills?: string[];
+      aspiringRole?: string;
+      experienceLevel?: string;
+      phoneNumber?: string;
+    } = {
+      firstName: values.firstName,
+      lastName: values.lastName,
+      skills: values.skills,
+      aspiringRole: values.aspiringRole,
+      phoneNumber: values.phoneNumber,
+      experienceLevel: values.experienceLevel,
+    };
+    updateUserDetailsMutation.mutate(newUser);
   };
 
   if (isLoading) return <LoadingScreen />;
@@ -254,6 +298,27 @@ function Profile() {
                   </FormControl>
                   <FormDescription>
                     Your primary email address, used for account-related
+                    communications.
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="phoneNumber"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Phone Number</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="tel"
+                      placeholder="+91 12345 67890"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    Your primary mobile number, used for account-related
                     communications.
                   </FormDescription>
                   <FormMessage />
@@ -354,8 +419,7 @@ function Profile() {
               <Button
                 type="submit"
                 className="w-full font-semibold"
-                // disabled={!valuesChanged}
-                disabled={true}
+                disabled={!valuesChanged}
               >
                 Update Profile
               </Button>
