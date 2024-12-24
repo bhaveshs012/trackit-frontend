@@ -6,11 +6,15 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Building2, Briefcase, FileText, Calendar, Trash } from "lucide-react";
+import { Building2, Briefcase, FileText, Calendar } from "lucide-react";
+import ConfirmDeleteDialog from "@/components/alert-dialogs/ConfirmDelete";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import apiClient from "@/api/apiClient";
+import { toast } from "@/hooks/use-toast";
 
 interface JobApplicationProps {
+  _id: string;
   companyName: string;
   position: string;
   jobLink: string;
@@ -29,6 +33,7 @@ const statusColors = {
 };
 
 export default function ArchivedApplicationCard({
+  _id,
   companyName,
   position,
   jobLink,
@@ -37,6 +42,35 @@ export default function ArchivedApplicationCard({
   notes,
   appliedOn,
 }: JobApplicationProps) {
+  const deleteArchivedApplicationById = async () => {
+    const response = await apiClient.delete(`applications/${_id}`);
+    return response.data.data;
+  };
+
+  const queryClient = useQueryClient();
+
+  const deleteArchivedApplicationMutation = useMutation({
+    mutationFn: deleteArchivedApplicationById,
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["getArchivedApplicationsByStatus"],
+      });
+      toast({
+        title: "The job application has been deleted successfully !!",
+      });
+    },
+    onError(error) {
+      toast({
+        title: "Error occurred while deleting the job application !!",
+        description: error.toString(),
+      });
+    },
+  });
+
+  const handleDeleteArchivedApplication = () => {
+    deleteArchivedApplicationMutation.mutate();
+  };
+
   return (
     <Card className="w-full max-w-md">
       <CardHeader>
@@ -89,13 +123,11 @@ export default function ArchivedApplicationCard({
         </div>
       </CardContent>
       <CardFooter>
-        <Button
-          variant="outline"
-          className="w-full hover:bg-red-950 hover:border-red-950"
-        >
-          <Trash className="w-4 h-4 mr-2" />
-          Delete Application
-        </Button>
+        <ConfirmDeleteDialog
+          onConfirm={handleDeleteArchivedApplication}
+          description="This action cannot be undone. This will permanently delete the
+            contact and remove your data from our servers."
+        />
       </CardFooter>
     </Card>
   );

@@ -110,6 +110,7 @@ const ArchivedApplicationsMain = () => {
           data.map((application: JobApplicationProps, index: number) => (
             <ArchivedApplicationCard
               key={String(index)}
+              _id={application._id}
               companyName={application.companyName}
               applicationStatus={application.applicationStatus}
               appliedOn={application.appliedOn}

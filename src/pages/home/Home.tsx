@@ -29,9 +29,13 @@ import JobApplicationCard from "./components/ApplicationCard";
 import { toast } from "@/components/hooks/use-toast";
 import { useMutation } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
+import LoadingScreen from "../common/LoadingScreen";
+import ErrorScreen from "../common/ErrorScreen";
 
 function Home() {
   const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<any>(null);
   const [containers, setContainers] = useState<ContainerType[]>([
     {
       id: uuidv4(),
@@ -78,6 +82,7 @@ function Home() {
   useEffect(() => {
     const fetchApplications = async () => {
       try {
+        setIsLoading(true);
         const updatedContainers = await Promise.all(
           containers.map(async (container) => {
             const response = await apiClient.get(
@@ -94,8 +99,11 @@ function Home() {
           })
         );
         setContainers(updatedContainers);
-      } catch (error) {
+      } catch (error: any) {
+        setError(error);
         console.error("Error fetching applications: ", error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -283,6 +291,16 @@ function Home() {
       });
     },
   });
+
+  if (isLoading) return <LoadingScreen />;
+  if (error) {
+    return (
+      <ErrorScreen
+        title="Error while fetching the job applications"
+        description="Could not fetch the job applications due to some internal server error"
+      />
+    );
+  }
 
   return (
     <div className="flex flex-col min-h-screen p-6 gap-y-6">

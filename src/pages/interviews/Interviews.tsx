@@ -59,7 +59,6 @@ const Interviews: React.FC<InterviewsPageProps> = ({ displayArchived }) => {
   });
 
   if (isLoading) return <LoadingScreen />;
-
   if (error) {
     return (
       <ErrorScreen
